@@ -4,7 +4,6 @@ import logging
 
 from botocore.vendored import requests
 
-from ses_account_monitor.config import LOG_LEVEL
 from ses_account_monitor.util import (
     json_dump_request_event,
     json_dump_response_event)
@@ -16,9 +15,8 @@ class HttpClient(object):
     '''
 
     def __init__(self, url, logger=None):
-        self.url = url
-
         self._set_logger(logger)
+        self.url = url
 
     @property
     def logger(self):
@@ -40,7 +38,7 @@ class HttpClient(object):
             self._logger = logger
         else:
             self._logger = logging.getLogger(self.__module__)
-            self._logger.setLevel(LOG_LEVEL)
+            self._logger.addHandler(logging.NullHandler())
 
     def _log_post_json_request(self, url, payload):
         self.logger.debug('Sending POST outbound request to %s', url)

@@ -4,7 +4,6 @@ import logging
 
 import boto3
 
-from ses_account_monitor.config import LOG_LEVEL
 from ses_account_monitor.util import (
     json_dump_request_event,
     json_dump_response_event)
@@ -82,8 +81,8 @@ class SesClient(object):
         if logger:
             self._logger = logger
         else:
-            self._logger = logging.getLogger(__name__)
-            self._logger.setLevel(LOG_LEVEL)
+            self._logger = logging.getLogger(self.__module__)
+            self._logger.addHandler(logging.NullHandler())
 
     def _build_ses_client(self):
         session_config = self._session_config

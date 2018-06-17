@@ -9,7 +9,6 @@ from datetime import (
 import boto3
 
 from ses_account_monitor.config import (
-    LOG_LEVEL,
     SES_REPUTATION_PERIOD,
     SES_REPUTATION_PERIOD_TIMEDELTA)
 from ses_account_monitor.util import (
@@ -111,8 +110,8 @@ class CloudWatchClient(object):
         if logger:
             self._logger = logger
         else:
-            self._logger = logging.getLogger(__name__)
-            self._logger.setLevel(LOG_LEVEL)
+            self._logger = logging.getLogger(self.__module__)
+            self._logger.addHandler(logging.NullHandler())
 
     def _build_cloudwatch_client(self):
         session_config = self._session_config
