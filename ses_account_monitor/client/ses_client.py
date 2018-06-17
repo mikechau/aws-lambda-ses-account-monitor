@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
 
 import logging
 
@@ -30,13 +31,33 @@ class SesClient(object):
     def get_account_sending_quota(self):
         return self.client.get_send_quota()
 
+    def get_account_sending_current_percentage(self):
+        stats = self.get_account_sending_quota()
+
+        usage = ((stats['SentLast24Hours'] / stats['Max24HourSend']) * 100)
+
+        if usage >= 100:
+            return 100
+
+        return usage
+
+    def get_account_sending_remaining_percentage(self):
+        current_percentage = self.get_account_sending_current_percentage()
+
+        remaining = 100 - current_percentage
+
+        if remaining <= 0:
+            return 0
+
+        return remaining
+
     def is_account_sending_rate_over(self, percent=None):
         if percent is None:
             percent = 100
 
         stats = self.get_account_sending_quota()
 
-        threshold = (percent * stats['MaxSendRate']) / 100.0
+        threshold = (percent * stats['Max24HourSend']) / 100.0
 
         return stats['SentLast24Hours'] >= threshold
 
