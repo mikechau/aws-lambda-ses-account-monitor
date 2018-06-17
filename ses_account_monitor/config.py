@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 LAMBDA_AWS_ACCOUNT_NAME = os.getenv('LAMBDA_AWS_ACCOUNT_NAME', 'undefined')
