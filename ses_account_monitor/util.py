@@ -2,6 +2,7 @@
 import json
 from datetime import datetime
 
+
 class CustomJsonEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime):
@@ -16,7 +17,7 @@ def json_dump(obj):
 
 def json_dump_request_event(class_name, method_name, params=None, details=None):
     event = {
-        'class_name':class_name,
+        'class_name': class_name,
         'method_name': method_name,
         'timestamp': datetime.utcnow(),
         'event': 'request',
@@ -29,7 +30,7 @@ def json_dump_request_event(class_name, method_name, params=None, details=None):
 
 def json_dump_response_event(class_name, method_name, response=None, details=None):
     event = {
-        'class_name':class_name,
+        'class_name': class_name,
         'method_name': method_name,
         'timestamp': datetime.utcnow(),
         'event': 'response',
