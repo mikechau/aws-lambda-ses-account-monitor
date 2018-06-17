@@ -11,12 +11,19 @@ import boto3
 from ses_account_monitor.config import (
     LOG_LEVEL,
     SES_REPUTATION_PERIOD,
-    SES_REPUTATION_TIMEDELTA)
+    SES_REPUTATION_PERIOD_TIMEDELTA)
 from ses_account_monitor.util import json_dump
 
 
 class CloudWatchClient(object):
-    def __init__(self, client=None, reputation_config=None, logger=None):
+    def __init__(
+        self,
+        client=None,
+        reputation_config=None,
+        logger=None,
+        session_config=None
+    ):
+        self._session_config = session_config
         self._set_client(client)
         self._set_reputation_config(reputation_config)
         self._set_logger(logger)
@@ -37,7 +44,7 @@ class CloudWatchClient(object):
 
         self._log_get_ses_reputation_metrics_request(params)
 
-        response = self.client.get_metric_data(params)
+        response = self.client.get_metric_data(**params)
 
         self._log_get_ses_reputation_metrics_response(response)
 
@@ -90,7 +97,18 @@ class CloudWatchClient(object):
         if client:
             self._client = client
         else:
-            self._client = boto3.client('cloudwatch')
+            self._client = self._build_cloudwatch_client()
+
+    def _build_cloudwatch_client(self):
+        session_config = self._session_config
+
+        if session_config:
+            session = boto3.Session(**session_config)
+            client = session.client('cloudwatch')
+        else:
+            client = boto3.client('cloudwatch')
+
+        return client
 
     def _set_reputation_config(self, reputation_config):
         if reputation_config:
@@ -98,7 +116,7 @@ class CloudWatchClient(object):
             self.ses_reputation_period_timedelta = reputation_config['ses_reputation_period_timedelta']
         else:
             self.ses_reputation_period = SES_REPUTATION_PERIOD
-            self.ses_reputation_period_timedelta = SES_REPUTATION_TIMEDELTA
+            self.ses_reputation_period_timedelta = SES_REPUTATION_PERIOD_TIMEDELTA
 
     def _set_logger(self, logger):
         if logger:

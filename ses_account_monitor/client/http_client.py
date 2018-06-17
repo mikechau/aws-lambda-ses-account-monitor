@@ -37,7 +37,7 @@ class HttpClient(object):
         if logger:
             self._logger = logger
         else:
-            self._logger = logging.getLogger(__name__)
+            self._logger = logging.getLogger(self.__module__)
             self._logger.setLevel(LOG_LEVEL)
 
     def _log_post_json_request(self, url, payload):

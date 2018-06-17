@@ -13,7 +13,7 @@ def webhook_url():
 @pytest.fixture()
 def client(webhook_url):
     pagerduty_client = PagerDutyClient(webhook_url)
-    pagerduty_client.logger.setLevel('DEBUG')
+    pagerduty_client.logger.setLevel('INFO')
     return pagerduty_client
 
 
