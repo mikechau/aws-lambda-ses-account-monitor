@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
 import logging
 
 from datetime import (
@@ -14,6 +13,7 @@ from ses_account_monitor.config import (
     SES_REPUTATION_PERIOD,
     SES_REPUTATION_TIMEDELTA)
 from ses_account_monitor.util import json_dump
+
 
 class CloudWatchClient(object):
     def __init__(self, client=None, reputation_config=None, logger=None):
