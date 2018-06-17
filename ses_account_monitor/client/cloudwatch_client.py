@@ -12,17 +12,17 @@ from ses_account_monitor.config import (
     LOG_LEVEL,
     SES_REPUTATION_PERIOD,
     SES_REPUTATION_PERIOD_TIMEDELTA)
-from ses_account_monitor.util import json_dump
+from ses_account_monitor.util import (
+    json_dump_request_event,
+    json_dump_response_event)
 
 
 class CloudWatchClient(object):
-    def __init__(
-        self,
-        client=None,
-        reputation_config=None,
-        logger=None,
-        session_config=None
-    ):
+    def __init__(self,
+                 client=None,
+                 reputation_config=None,
+                 logger=None,
+                 session_config=None):
         self._session_config = session_config
         self._set_client(client)
         self._set_reputation_config(reputation_config)
@@ -99,17 +99,6 @@ class CloudWatchClient(object):
         else:
             self._client = self._build_cloudwatch_client()
 
-    def _build_cloudwatch_client(self):
-        session_config = self._session_config
-
-        if session_config:
-            session = boto3.Session(**session_config)
-            client = session.client('cloudwatch')
-        else:
-            client = boto3.client('cloudwatch')
-
-        return client
-
     def _set_reputation_config(self, reputation_config):
         if reputation_config:
             self.ses_reptuation_period = reputation_config['ses_reputation_period']
@@ -125,22 +114,29 @@ class CloudWatchClient(object):
             self._logger = logging.getLogger(__name__)
             self._logger.setLevel(LOG_LEVEL)
 
+    def _build_cloudwatch_client(self):
+        session_config = self._session_config
+
+        if session_config:
+            session = boto3.Session(**session_config)
+            client = session.client('cloudwatch')
+        else:
+            client = boto3.client('cloudwatch')
+
+        return client
+
     def _log_get_ses_reputation_metrics_request(self, params):
         self.logger.debug('Requesting SES reputation metric data for account')
 
         self.logger.info(
-            json_dump({
-                'class': self.__class__.__name__,
-                'method': 'get_ses_reputation_metrics',
-                'params': params
-            }))
+            json_dump_request_event(class_name=self.__class__.__name__,
+                                    method_name='get_ses_reputation_metrics',
+                                    params=params))
 
     def _log_get_ses_reputation_metrics_response(self, response):
         self.logger.debug('Received SES reputation metric data for account')
 
         self.logger.info(
-            json_dump({
-                'class': self.__class__.__name__,
-                'method': 'get_ses_reputation_metrics',
-                'response': response
-            }))
+            json_dump_response_event(class_name=self.__class__.__name__,
+                                     method_name='get_ses_reputation_metrics',
+                                     response=response))

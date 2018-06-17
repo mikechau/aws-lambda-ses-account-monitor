@@ -11,11 +11,10 @@ from ses_account_monitor.client.cloudwatch_client import CloudWatchClient
 class TestWithHealthyMetrics():
     @pytest.fixture()
     def cloudwatch_client(self):
-        return boto3.client(
-            'cloudwatch',
-            aws_access_key_id='a',
-            aws_secret_access_key='b',
-            region_name='us-west-2')
+        return boto3.client('cloudwatch',
+                            aws_access_key_id='a',
+                            aws_secret_access_key='b',
+                            region_name='us-west-2')
 
     @pytest.fixture()
     def start_datetime(self):
@@ -91,8 +90,7 @@ class TestWithHealthyMetrics():
                  'Timestamps': [current_datetime],
                  'Values': [0.0001]}]
 
-    def test_get_ses_reputation_metrics(
-                                        self,
+    def test_get_ses_reputation_metrics(self,
                                         cloudwatch_client,
                                         cloudwatch_response,
                                         cloudwatch_expected_params,
@@ -101,10 +99,9 @@ class TestWithHealthyMetrics():
 
         stubber = Stubber(cloudwatch_client)
 
-        stubber.add_response(
-            'get_metric_data',
-            cloudwatch_response,
-            cloudwatch_expected_params)
+        stubber.add_response('get_metric_data',
+                             cloudwatch_response,
+                             cloudwatch_expected_params)
         stubber.activate()
 
         client = CloudWatchClient(client=cloudwatch_client)

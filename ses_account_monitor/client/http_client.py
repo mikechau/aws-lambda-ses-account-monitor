@@ -5,7 +5,9 @@ import logging
 from botocore.vendored import requests
 
 from ses_account_monitor.config import LOG_LEVEL
-from ses_account_monitor.util import json_dump
+from ses_account_monitor.util import (
+    json_dump_request_event,
+    json_dump_response_event)
 
 
 class HttpClient(object):
@@ -44,12 +46,12 @@ class HttpClient(object):
         self.logger.debug('Sending POST outbound request to %s', url)
 
         self.logger.info(
-            json_dump({
-                'class': self.__class__.__name__,
-                'method': 'post_json',
-                'url': url,
-                'payload': payload
-            }))
+            json_dump_request_event(class_name=self.__class__.__name__,
+                                    method_name='post_json',
+                                    params=payload,
+                                    details={
+                                        'url': url
+                                    }))
 
     def _log_post_json_response(self, response):
         self.logger.debug('Received POST %s response from %s',
@@ -57,10 +59,10 @@ class HttpClient(object):
                           response.url)
 
         self.logger.info(
-           json_dump({
-                'class': self.__class__.__name__,
-                'method': 'post_json',
-                'url': response.url,
-                'status_code': response.status_code,
-                'response': response.json()
-            }))
+            json_dump_response_event(class_name=self.__class__.__name__,
+                                     method_name='post_json',
+                                     response=response.json(),
+                                     details={
+                                        'url': response.url,
+                                        'status_code': response.status_code
+                                     }))
