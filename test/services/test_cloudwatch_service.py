@@ -90,12 +90,12 @@ class TestWithHealthyMetrics():
                  'Timestamps': [current_datetime],
                  'Values': [0.0001]}]
 
-    def test_get_ses_reputation_metrics(self,
-                                        cloudwatch_client,
-                                        cloudwatch_response,
-                                        cloudwatch_expected_params,
-                                        end_datetime,
-                                        expected_result):
+    def test_get_ses_account_reputation_metrics(self,
+                                                cloudwatch_client,
+                                                cloudwatch_response,
+                                                cloudwatch_expected_params,
+                                                end_datetime,
+                                                expected_result):
 
         stubber = Stubber(cloudwatch_client)
 
@@ -105,6 +105,6 @@ class TestWithHealthyMetrics():
         stubber.activate()
 
         service = CloudWatchService(client=cloudwatch_client)
-        result = service.get_ses_reputation_metrics(current_time=end_datetime)
+        result = service.get_ses_account_reputation_metrics(current_time=end_datetime)
 
         assert result == expected_result
