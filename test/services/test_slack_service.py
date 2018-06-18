@@ -1,0 +1,171 @@
+# -*- coding: utf-8 -*-
+from datetime import datetime
+
+import pytest
+import responses
+
+from ses_account_monitor.services.slack_service import SlackService
+
+
+@pytest.fixture()
+def webhook_url():
+    return 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'
+
+
+@pytest.fixture()
+def service(webhook_url):
+    slack_service = SlackService(webhook_url)
+    return slack_service
+
+
+@pytest.fixture()
+def ses_account_sending_quota_payload():
+    return {'attachments': [
+        {'color': 'danger',
+         'fallback': 'SES account sending rate has breached CRITICAL threshold.',
+         'fields': [{'short': True,
+                     'title': 'Service',
+                     'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Sending>'},
+                    {'short': True,
+                     'title': 'Account',
+                     'value': 'undefined'},
+                    {'short': True,
+                     'title': 'Region',
+                     'value': 'undefined'},
+                    {'short': True,
+                     'title': 'Environment',
+                     'value': 'undefined'},
+                    {'short': True,
+                     'title': 'Status',
+                     'value': 'CRITICAL'},
+                    {'short': True,
+                     'title': 'Threshold',
+                     'value': '9000.00%'},
+                    {'short': True,
+                     'title': 'Current',
+                     'value': '10000.00%'},
+                    {'short': True,
+                     'title': 'Sent / Max',
+                     'value': '9000 / 9000'},
+                    {'short': False,
+                     'title': 'Message',
+                     'value': 'SES account sending rate has breached the CRITICAL threshold.'}],
+         'footer': 'undefined-undefined-undefined-ses-account-monitor',
+         'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
+         'ts': 123456789}],
+        'username': 'SES Account Monitor'}
+
+
+@pytest.fixture()
+def ses_account_reputation_payload():
+    return {'attachments': [
+        {'color': 'danger',
+         'fallback': 'SES account reputation has breached CRITICAL threshold.',
+         'fields': [{'short': True,
+                     'title': 'Service',
+                     'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Reputation>'},
+                    {'short': True,
+                     'title': 'Account',
+                     'value': 'undefined'},
+                    {'short': True,
+                     'title': 'Region',
+                     'value': 'undefined'},
+                    {'short': True,
+                     'title': 'Environment',
+                     'value': 'undefined'},
+                    {'short': True,
+                     'title': 'Status',
+                     'value': 'CRITICAL'}],
+         'footer': 'undefined-undefined-undefined-ses-account-monitor',
+         'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
+         'ts': 123456789},
+        {'title': 'Metrics', 'value': 'Bounce Rate, Complaint Rate'},
+        {'short': True,
+         'title': 'Bounce Rate / Threshold',
+         'value': '100.00% / 100.00%'},
+        {'short': True,
+         'title': 'Bounce Rate Time',
+         'value': '2018-01-01 00:00:00'},
+        {'short': True,
+         'title': 'Complaint Rate / Threshold',
+         'value': '100.00% / 100.00%'},
+        {'short': True,
+         'title': 'Complaint Rate Time',
+         'value': '2018-01-01 00:00:00'},
+        {'short': False,
+         'title': 'Message',
+         'value': 'SES account reputation has breached the CRITICAL threshold.'}],
+        'username': 'SES Account Monitor'}
+
+
+@responses.activate
+def test_post_message(service, webhook_url):
+    with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
+        rsps.add(
+            responses.POST,
+            webhook_url,
+            status=200,
+            json={
+                'ok': True
+            }
+        )
+
+        result = service.post_json({})
+
+        assert result.status_code == 200
+
+
+def test_build_ses_account_sending_quota_message(service, ses_account_sending_quota_payload):
+    result = service.build_ses_account_sending_quota_message(threshold_name='CRITICAL',
+                                                             current_percent=100,
+                                                             threshold_percent=90,
+                                                             sent_emails=9000,
+                                                             max_emails=9000,
+                                                             ts=123456789)
+
+    assert result == ses_account_sending_quota_payload
+
+
+def test_build_ses_account_reputation_message(service, ses_account_reputation_payload):
+    metrics = [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
+               ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
+    result = service.build_ses_account_reputation_message(threshold_name='CRITICAL',
+                                                          metrics=metrics,
+                                                          ts=123456789)
+
+    assert result == ses_account_reputation_payload
+
+
+@responses.activate
+def test_send_notifications(service, webhook_url):
+    with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
+        rsps.add(
+            responses.POST,
+            webhook_url,
+            status=200,
+            json={
+                'ok': True
+            }
+        )
+
+        service.build_ses_account_sending_quota_message(threshold_name='CRITICAL',
+                                                        current_percent=100,
+                                                        threshold_percent=90,
+                                                        sent_emails=9000,
+                                                        max_emails=9000,
+                                                        ts=123456789,
+                                                        enqueue=True)
+
+        service.build_ses_account_sending_quota_message(threshold_name='CRITICAL',
+                                                        current_percent=100,
+                                                        threshold_percent=90,
+                                                        sent_emails=9000,
+                                                        max_emails=9000,
+                                                        ts=123456789,
+                                                        enqueue=True)
+
+        send_status, (request_1, request_2) = service.send_notifications()
+
+        assert send_status is True
+        assert request_1.status_code == 200
+        assert request_2.status_code == 200
