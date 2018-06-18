@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 import logging
-from collections import deque
 
 from ses_account_monitor.services import (
-    SesService)
+    SesService,
+    SlackService)
 from ses_account_monitor.config import (
-    LAMBDA_AWS_REGION)
+    LAMBDA_AWS_REGION,
+    SES_SENDING_QUOTA_WARNING_PERCENT,
+    SES_SENDING_QUOTA_CRITICAL_PERCENT)
 from ses_account_monitor.util import (
     json_dump_request_event,
     json_dump_response_event)
 
 
 NOTIFY_LIVE_STRATEGY = 'live'
-NOTIFY_DEBUG_STRATEGY = 'debug'
 NOTIFY_NOOP_STRATEGY = 'noop'
 
 AWS_CONFIG = {
@@ -30,22 +31,19 @@ NOTIFY_CONFIG = {
 }
 
 THRESHOLDS = {
-    'SES_SENDING_QUOTA_WARNING_PERCENT': 80,
-    'SES_SENDING_QUOTA_CRITICAL_PERCENT': 90
+    'ses_sending_quota_warning_percent': SES_SENDING_QUOTA_WARNING_PERCENT,
+    'ses_sending_quota_critical_percent': SES_SENDING_QUOTA_CRITICAL_PERCENT
 }
 
 
 class Monitor(object):
-    def __init__(self, aws_config=None,  notify_config=False, thresholds=None, ses_service=None, logger=None):
+    def __init__(self, aws_config=None,  notify_config=False, thresholds=None, ses_service=None, slack_service=None, logger=None):
         self._aws_config = (aws_config or AWS_CONFIG)
         self._notify_config = (notify_config or NOTIFY_CONFIG)
         self._thresholds = (thresholds or THRESHOLDS)
-        self._message_queue = {
-            'slack': deque([]),
-            'pagerduty': deque([])
-        }
 
         self._set_ses_service(ses_service)
+        self._set_slack_service(slack_service)
         self._set_logger(logger)
 
     @property
@@ -62,11 +60,11 @@ class Monitor(object):
 
     @property
     def ses_sending_quota_warning_percent(self):
-        return self._thresholds['SES_SENDING_QUOTA_WARNING_PERCENT']
+        return self._thresholds['ses_sending_quota_warning_percent']
 
     @property
     def ses_sending_quota_critical_percent(self):
-        return self._thresholds['SES_SENDING_QUOTA_CRITICAL_PERCENT']
+        return self._thresholds['ses_sending_quota_critical_percent']
 
     @property
     def logger(self):
@@ -78,8 +76,8 @@ class Monitor(object):
 
     def handle_ses_quota(self):
         current_percent = self.ses_service.get_account_sending_current_percentage()
-        critical_percent = self.ses_sending_quota_critical_percent()
-        warning_percent = self.ses_sending_quota_warning_percent()
+        critical_percent = self.ses_service.ses_sending_quota_critical_percent()
+        warning_percent = self.ses_service.ses_sending_quota_warning_percent()
 
         if current_percent >= critical_percent:
             self._log_handle_ses_quota_request(current_percent, critical_percent, 'CRITICAL')
@@ -90,79 +88,23 @@ class Monitor(object):
         else:
             self._log_handle_ses_quota_response(current_percent, critical_percent, 'OK')
 
-    def build_ses_quota_slack_message(self, color):
-        return {
-            'attachments': [
-                {
-                    'fallback': 'Send rate has breached warning threshold.',
-                    'color': 'warning',
-                    'title_link': 'https://console.amazonaws.com/',
-                    'fields': [
-                        {
-                            'title': 'Service',
-                            'value': '<https://google.com|SES Account Sending>',
-                            'short': True
-                        },
-                        {
-                            'title': 'Account',
-                            'value': 'ellation',
-                            'short': True
-                        },
-                        {
-                            'title': 'Region',
-                            'value': 'us-west-2',
-                            'short': True
-                        },
-                        {
-                            'title': 'Environment',
-                            'value': 'global',
-                            'short': True
-                        },
-                        {
-                            'title': 'Status',
-                            'value': 'WARNING',
-                            'short': True
-                        },
-                        {
-                            'title': 'Threshold',
-                            'value': '60%',
-                            'short': True
-                        },
-                        {
-                            'title': 'Current',
-                            'value': '60%',
-                            'short': True
-                        },
-                        {
-                            'title': 'Sent / Max',
-                            'value': '3 / 3',
-                            'short': True
-                        },
-                        {
-                            'title': 'Message',
-                            'value': 'SES account sending has breached the WARNING threshold.',
-                            'short': False
-                        }
-                    ],
-                    'footer': 'ellation-us-west-2-global-ses-account-monitor',
-                    'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
-                    'ts': 123456789
-                }
-            ],
-            'username': 'SES Account Monitor'
-        }
-
     def is_slack_notify_enabled(self):
-        return self._notify_config['service']['slack']
+        return self._notify_config['service'].get('slack', False)
 
     def is_pagerduty_notify_enabled(self):
-        return self._notify_config['service']['pagerduty']
+        return self._notify_config['service'].get('pagerduty', False)
 
     def _set_ses_service(self, ses_service):
         if ses_service:
             self._ses_service = ses_service
         else:
             self._ses_service = SesService(**self._aws_config)
+
+    def _set_slack_service(self, slack_service):
+        if slack_service:
+            self._slack_service = slack_service
+        else:
+            self._slack_service = SlackService()
 
     def _set_logger(self, logger):
         if logger:

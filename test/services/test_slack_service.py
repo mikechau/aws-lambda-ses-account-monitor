@@ -14,7 +14,7 @@ def webhook_url():
 
 @pytest.fixture()
 def service(webhook_url):
-    slack_service = SlackService(webhook_url)
+    slack_service = SlackService(url=webhook_url, channels=['#general'])
     return slack_service
 
 
@@ -53,6 +53,7 @@ def ses_account_sending_quota_payload():
          'footer': 'undefined-undefined-undefined-ses-account-monitor',
          'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
          'ts': 123456789}],
+        'icon_emoji': None,
         'username': 'SES Account Monitor'}
 
 
@@ -95,6 +96,7 @@ def ses_account_reputation_payload():
         {'short': False,
          'title': 'Message',
          'value': 'SES account reputation has breached the CRITICAL threshold.'}],
+        'icon_emoji': None,
         'username': 'SES Account Monitor'}
 
 

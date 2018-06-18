@@ -25,16 +25,23 @@ class SlackService(HttpClient):
     '''
 
     def __init__(self,
-                 url,
+                 url=None,
+                 channels=None,
                  config=None,
                  dry_run=False,
                  logger=None):
-        super(SlackService, self).__init__(url=url,
-                                           logger=logger)
+
         self._config = (config or SLACK_SERVICE_CONFIG)
         self._dry_run = dry_run
 
+        if url is None:
+            url = self._config.webhook_url
+
+        super(SlackService, self).__init__(url=url,
+                                           logger=logger)
+
         self.messages = deque([])
+        self.channels = (channels or self._config.channels)
 
     @property
     def config(self):
@@ -51,14 +58,21 @@ class SlackService(HttpClient):
         if dry_run or self.dry_run:
             while self.messages:
                 message = self.messages.popleft()
-                responses.append(responses)
+
+                channel_messages = self._build_message_with_channels(message)
+                responses.extend(channel_messages)
 
             return responses
 
         while self.messages:
             message = self.messages.popleft()
-            response = self.post_json(payload=message)
-            responses.append(response)
+
+            for channel in self.channels:
+                payload = {'channel': channel}
+                payload.update(message)
+
+                response = self.post_json(payload=message)
+                responses.append(response)
 
         return (send_status, responses)
 
@@ -70,63 +84,63 @@ class SlackService(HttpClient):
                                                 max_emails,
                                                 ts=None,
                                                 enqueue=False):
+
         payload = {
-            'attachments': [
-                {
-                    'fallback': 'SES account sending rate has breached {} threshold.'.format(threshold_name),
-                    'color': self._get_color(threshold_name),
-                    'fields': [
-                        {
-                            'title': 'Service',
-                            'value': '<{}|SES Account Sending>'.format(self.config.ses_console_url),
-                            'short': True
-                        },
-                        {
-                            'title': 'Account',
-                            'value': self.config.aws_account_name,
-                            'short': True
-                        },
-                        {
-                            'title': 'Region',
-                            'value': self.config.aws_region,
-                            'short': True
-                        },
-                        {
-                            'title': 'Environment',
-                            'value': self.config.aws_environment,
-                            'short': True
-                        },
-                        {
-                            'title': 'Status',
-                            'value': threshold_name,
-                            'short': True
-                        },
-                        {
-                            'title': 'Threshold',
-                            'value': '{:.2%}'.format(threshold_percent),
-                            'short': True
-                        },
-                        {
-                            'title': 'Current',
-                            'value': '{:.2%}'.format(current_percent),
-                            'short': True
-                        },
-                        {
-                            'title': 'Sent / Max',
-                            'value': '{sent} / {max}'.format(sent=sent_emails, max=max_emails),
-                            'short': True
-                        },
-                        {
-                            'title': 'Message',
-                            'value': 'SES account sending rate has breached the {} threshold.'.format(threshold_name),
-                            'short': False
-                        }
-                    ],
-                    'footer': self.config.service_name,
-                    'footer_icon': self.config.footer_icon_url,
-                    'ts': (ts or current_unix_timestamp())
-                }
-            ],
+            'attachments': [{
+                'fallback': 'SES account sending rate has breached {} threshold.'.format(threshold_name),
+                'color': self._get_color(threshold_name),
+                'fields': [
+                    {
+                        'title': 'Service',
+                        'value': '<{}|SES Account Sending>'.format(self.config.ses_console_url),
+                        'short': True
+                    },
+                    {
+                        'title': 'Account',
+                        'value': self.config.aws_account_name,
+                        'short': True
+                    },
+                    {
+                        'title': 'Region',
+                        'value': self.config.aws_region,
+                        'short': True
+                    },
+                    {
+                        'title': 'Environment',
+                        'value': self.config.aws_environment,
+                        'short': True
+                    },
+                    {
+                        'title': 'Status',
+                        'value': threshold_name,
+                        'short': True
+                    },
+                    {
+                        'title': 'Threshold',
+                        'value': '{:.2%}'.format(threshold_percent),
+                        'short': True
+                    },
+                    {
+                        'title': 'Current',
+                        'value': '{:.2%}'.format(current_percent),
+                        'short': True
+                    },
+                    {
+                        'title': 'Sent / Max',
+                        'value': '{sent} / {max}'.format(sent=sent_emails, max=max_emails),
+                        'short': True
+                    },
+                    {
+                        'title': 'Message',
+                        'value': 'SES account sending rate has breached the {} threshold.'.format(threshold_name),
+                        'short': False
+                    }
+                ],
+                'footer': self.config.service_name,
+                'footer_icon': self.config.footer_icon_url,
+                'ts': (ts or current_unix_timestamp())
+            }],
+            'icon_emoji': self.config.icon_emoji,
             'username': 'SES Account Monitor'
         }
 
@@ -182,6 +196,7 @@ class SlackService(HttpClient):
                     'ts': (ts or current_unix_timestamp())
                 }
             ],
+            'icon_emoji': self.config.icon_emoji,
             'username': 'SES Account Monitor'
         }
 
@@ -227,6 +242,18 @@ class SlackService(HttpClient):
             message = 'SES account reputation status is {}.'.format(threshold_name)
 
         return (fallback_message, message)
+
+    def _build_message_with_channels(self, base_payload):
+        messages = []
+        for channel in self.channels:
+            payload = {'channel': channel}
+            payload.update(base_payload)
+            messages.append(payload)
+
+        return messages
+
+    def _enqueue_messages(self, messages):
+        self.messages.extend(messages)
 
     def _enqueue_message(self, message):
         self.messages.append(message)
