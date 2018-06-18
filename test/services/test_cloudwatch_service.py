@@ -5,7 +5,7 @@ import boto3
 import pytest
 
 from botocore.stub import Stubber
-from ses_account_monitor.clients.cloudwatch_client import CloudWatchClient
+from ses_account_monitor.services.cloudwatch_service import CloudWatchService
 
 
 class TestWithHealthyMetrics():
@@ -79,7 +79,7 @@ class TestWithHealthyMetrics():
         }
 
     @pytest.fixture()
-    def expected_results(self, current_datetime):
+    def expected_result(self, current_datetime):
         return [{'Id': 'bounce_rate',
                  'Label': 'Bounce Rate',
                  'StatusCode': 'Complete',
@@ -95,7 +95,7 @@ class TestWithHealthyMetrics():
                                         cloudwatch_response,
                                         cloudwatch_expected_params,
                                         end_datetime,
-                                        expected_results):
+                                        expected_result):
 
         stubber = Stubber(cloudwatch_client)
 
@@ -104,7 +104,7 @@ class TestWithHealthyMetrics():
                              cloudwatch_expected_params)
         stubber.activate()
 
-        client = CloudWatchClient(client=cloudwatch_client)
-        results = client.get_ses_reputation_metrics(current_time=end_datetime)
+        service = CloudWatchService(client=cloudwatch_client)
+        result = service.get_ses_reputation_metrics(current_time=end_datetime)
 
-        assert results == expected_results
+        assert result == expected_result

@@ -10,7 +10,7 @@ from ses_account_monitor.util import (
     json_dump_response_event)
 
 
-class SesClient(object):
+class SesService(object):
     def __init__(self,
                  client=None,
                  logger=None,

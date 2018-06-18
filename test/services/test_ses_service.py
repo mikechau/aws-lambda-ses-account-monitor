@@ -3,15 +3,20 @@ import boto3
 import pytest
 
 from botocore.stub import Stubber
-from ses_account_monitor.clients.ses_client import SesClient
+from ses_account_monitor.services.ses_service import SesService
 
 
 @pytest.fixture()
-def ses_client():
+def client():
     return boto3.client('ses',
                         aws_access_key_id='a',
                         aws_secret_access_key='b',
                         region_name='us-west-2')
+
+
+@pytest.fixture()
+def service(client):
+    return SesService(client=client)
 
 
 @pytest.fixture()
@@ -35,27 +40,25 @@ def ses_quota_responses():
     }, None, True))
 
 
-def test_get_account_sending_quota(ses_client, ses_quota_responses):
-    stubber = Stubber(ses_client)
+def test_get_account_sending_quota(client, service, ses_quota_responses):
+    stubber = Stubber(client)
 
     stubber.add_response('get_send_quota',
                          ses_quota_responses[0][0],
                          {})
-    stubber.activate()
 
-    client = SesClient(client=ses_client)
-    results = client.get_account_sending_quota()
+    with stubber:
+        result = service.get_account_sending_quota()
 
-    assert results == {
-        'Max24HourSend': 123.0,
-        'MaxSendRate': 523.0,
-        'SentLast24Hours': 0.0
-    }
+        assert result == {
+            'Max24HourSend': 123.0,
+            'MaxSendRate': 523.0,
+            'SentLast24Hours': 0.0
+        }
 
 
-def test_is_account_sending_rate_over(ses_client, ses_quota_responses):
-    stubber = Stubber(ses_client)
-    client = SesClient(client=ses_client)
+def test_is_account_sending_rate_over(client, service, ses_quota_responses):
+    stubber = Stubber(client)
 
     for response, percentage, expected_result in ses_quota_responses:
         stubber.add_response('get_send_quota',
@@ -63,15 +66,15 @@ def test_is_account_sending_rate_over(ses_client, ses_quota_responses):
                              {})
         stubber.activate()
 
-        results = client.is_account_sending_rate_over(percentage)
+        result = service.is_account_sending_rate_over(percentage)
 
         stubber.deactivate()
 
-        assert results == expected_result
+        assert result == expected_result
 
 
-def test_toggle_account_sending(ses_client):
-    stubber = Stubber(ses_client)
+def test_toggle_account_sending(client, service):
+    stubber = Stubber(client)
 
     stubber.add_response('get_account_sending_enabled',
                          {'Enabled': True},
@@ -87,44 +90,37 @@ def test_toggle_account_sending(ses_client):
                          {'Enabled': True})
 
     with stubber:
-        client = SesClient(client=ses_client)
+        disable_result = service.toggle_account_sending()
+        assert disable_result is False
 
-        disable_response = client.toggle_account_sending()
-        assert disable_response is False
-
-        enable_response = client.toggle_account_sending()
-        assert enable_response is True
+        enable_result = service.toggle_account_sending()
+        assert enable_result is True
 
 
-def test_enable_account_sending(ses_client):
-    stubber = Stubber(ses_client)
+def test_enable_account_sending(client, service):
+    stubber = Stubber(client)
     stubber.add_response('update_account_sending_enabled',
                          {},
                          {'Enabled': True})
-    stubber.activate()
 
-    client = SesClient(client=ses_client)
-    response = client.enable_account_sending()
-
-    assert response is True
+    with stubber:
+        result = service.enable_account_sending()
+        assert result is True
 
 
-def test_disable_account_sending(ses_client):
-    stubber = Stubber(ses_client)
+def test_disable_account_sending(client, service):
+    stubber = Stubber(client)
     stubber.add_response('update_account_sending_enabled',
                          {},
                          {'Enabled': False})
-    stubber.activate()
 
-    client = SesClient(client=ses_client)
-    response = client.disable_account_sending()
-
-    assert response is False
+    with stubber:
+        result = service.disable_account_sending()
+        assert result is False
 
 
-def test_get_account_sending_current_percentage(ses_client):
-    stubber = Stubber(ses_client)
-    client = SesClient(client=ses_client)
+def test_get_account_sending_current_percentage(client, service):
+    stubber = Stubber(client)
 
     stubber.add_response('get_send_quota',
                          {
@@ -141,16 +137,15 @@ def test_get_account_sending_current_percentage(ses_client):
                          },
                          {})
     with stubber:
-        zero_response = client.get_account_sending_current_percentage()
-        assert zero_response == 0
+        zero_result = service.get_account_sending_current_percentage()
+        assert zero_result == 0
 
-        hundred_response = client.get_account_sending_current_percentage()
-        assert hundred_response == 100
+        hundred_result = service.get_account_sending_current_percentage()
+        assert hundred_result == 100
 
 
-def test_get_account_sending_remaining_percentage(ses_client):
-    stubber = Stubber(ses_client)
-    client = SesClient(client=ses_client)
+def test_get_account_sending_remaining_percentage(client, service):
+    stubber = Stubber(client)
 
     stubber.add_response('get_send_quota',
                          {
@@ -167,8 +162,8 @@ def test_get_account_sending_remaining_percentage(ses_client):
                          },
                          {})
     with stubber:
-        hundred_response = client.get_account_sending_remaining_percentage()
-        assert hundred_response == 100
+        hundred_result = service.get_account_sending_remaining_percentage()
+        assert hundred_result == 100
 
-        zero_response = client.get_account_sending_remaining_percentage()
-        assert zero_response == 0
+        zero_result = service.get_account_sending_remaining_percentage()
+        assert zero_result == 0

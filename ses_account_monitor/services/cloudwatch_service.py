@@ -16,7 +16,7 @@ from ses_account_monitor.util import (
     json_dump_response_event)
 
 
-class CloudWatchClient(object):
+class CloudWatchService(object):
     def __init__(self,
                  client=None,
                  reputation_config=None,
