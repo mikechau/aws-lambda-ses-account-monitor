@@ -52,10 +52,14 @@ class SlackService(HttpClient):
         return self._dry_run
 
     def send_notifications(self, dry_run=None):
+        self.logger.debug('Sending notifications to Slack channels...')
+
         responses = []
         send_status = (not dry_run)
 
         if dry_run or self.dry_run:
+            self.logger.debug('Slack DRY RUN enabled, not sending notifications!')
+
             while self.messages:
                 message = self.messages.popleft()
 
@@ -68,6 +72,8 @@ class SlackService(HttpClient):
             message = self.messages.popleft()
 
             for channel in self.channels:
+                self.logger.debug('Sending Slack notification to %s...', channel)
+
                 payload = {'channel': channel}
                 payload.update(message)
 
