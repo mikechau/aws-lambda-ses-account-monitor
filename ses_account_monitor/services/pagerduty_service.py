@@ -3,14 +3,14 @@ from collections import deque
 
 from ses_account_monitor.clients.http_client import HttpClient
 
-from ses_account_monitor.config import PAGER_DUTY_SERVICE_CONFIG
+from ses_account_monitor.config import (
+    ACTION_ALERT,
+    ACTION_PAUSE,
+    PAGER_DUTY_SERVICE_CONFIG)
 
 from ses_account_monitor.util import (
     current_iso8601_timestamp,
     current_unix_timestamp)
-
-ACTION_ALERT = 'alert'
-ACTION_PAUSE = 'pause'
 
 MAX_PAYLOAD_SIZE = (512 << 10)
 
@@ -108,13 +108,15 @@ class PagerDutyService(HttpClient):
                                            client='AWS Console',
                                            client_url=self.config.ses_console_url)
 
-    def build_ses_account_reputation_trigger_event_payload(self, metrics, event_ts=None, metric_ts=None, action='alert'):
+    def build_ses_account_reputation_trigger_event_payload(self, metrics, event_ts=None, metric_ts=None, action=None):
         return self._build_trigger_payload(summary='SES account reputation is at dangerous levels.',
                                            severity='critical',
                                            class_type=SES_ACCOUNT_REPUTATION_CLASS_TYPE,
                                            event_action='trigger',
                                            timestamp=event_ts,
-                                           custom_details=self._build_ses_reputation_custom_details(action, metrics, metric_ts),
+                                           custom_details=self._build_ses_reputation_custom_details(metrics=metrics,
+                                                                                                    action=action,
+                                                                                                    ts=metric_ts),
                                            client='AWS Console',
                                            client_url=self.config.ses_console_url)
 
@@ -169,7 +171,9 @@ class PagerDutyService(HttpClient):
             'version': 'v1.2018.06.18'
         }
 
-    def _build_ses_reputation_custom_details(self, action, metrics, ts=None):
+    def _build_ses_reputation_custom_details(self, metrics, action=None, ts=None):
+        action = (action or ACTION_ALERT)
+
         details = {
             'aws_account_name': self.config.aws_account_name,
             'aws_region': self.config.aws_region,

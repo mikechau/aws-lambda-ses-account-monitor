@@ -4,6 +4,8 @@ from collections import deque
 from ses_account_monitor.clients.http_client import HttpClient
 
 from ses_account_monitor.config import (
+    ACTION_ALERT,
+    ACTION_PAUSE,
     SLACK_SERVICE_CONFIG,
     THRESHOLD_CRITICAL,
     THRESHOLD_OK,
@@ -166,11 +168,10 @@ class SlackService(HttpClient):
     def build_ses_account_reputation_payload(self,
                                              threshold_name,
                                              metrics,
-                                             ts=None):
+                                             ts=None,
+                                             action=None):
 
         fallback_text, primary_text = self._build_ses_reputation_text(threshold_name)
-
-        metric_names = ', '.join(map(lambda x: x[0], metrics))
 
         message = {
             'attachments': [
@@ -202,6 +203,11 @@ class SlackService(HttpClient):
                             'title': 'Status',
                             'value': threshold_name,
                             'short': True
+                        },
+                        {
+                            'title': 'Action',
+                            'value': (action or ACTION_ALERT).upper(),
+                            'short': True
                         }
                     ],
                     'footer': self.config.service_name,
@@ -213,16 +219,11 @@ class SlackService(HttpClient):
             'username': 'SES Account Monitor'
         }
 
-        message['attachments'].append({
-            'title': 'Metrics',
-            'value': metric_names
-        })
-
         for label, current_percent, threshold_percent, ts in metrics:
             metric_value = '{current:.2%} / {threshold:.2%}'.format(current=current_percent,
                                                                     threshold=threshold_percent)
 
-            message['attachments'].extend(
+            message['attachments'][0]['fields'].extend(
                 [{'title': '{} / Threshold'.format(label),
                   'value': metric_value,
                   'short': True},
@@ -230,7 +231,7 @@ class SlackService(HttpClient):
                   'value': str(ts),
                   'short': True}])
 
-        message['attachments'].append({
+        message['attachments'][0]['fields'].append({
             'title': 'Message',
             'value': primary_text,
             'short': False

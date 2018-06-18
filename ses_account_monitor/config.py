@@ -25,9 +25,12 @@ SlackServiceConfig = namedtuple('SlackServiceConfig', ('aws_account_name',
                                                        'webhook_url'))
 
 # STATIC CONSTANTS
-THRESHOLD_WARNING = 'WARNING'
+ACTION_ALERT = 'alert'
+ACTION_PAUSE = 'pause'
+
 THRESHOLD_CRITICAL = 'CRITICAL'
 THRESHOLD_OK = 'OK'
+THRESHOLD_WARNING = 'WARNING'
 
 # LAMBDA CONSTANTS
 LAMBDA_AWS_ACCOUNT_NAME = os.getenv('LAMBDA_AWS_ACCOUNT_NAME', 'undefined')
