@@ -83,16 +83,16 @@ class SlackService(HttpClient):
         return (send_status, responses)
 
     def enqueue_ses_account_sending_quota_message(self, *args, **kwargs):
-        message = self.build_ses_account_sending_quota_message(*args, **kwargs)
+        message = self.build_ses_account_sending_quota_payload(*args, **kwargs)
         self._enqueue_message(message)
         return self
 
     def enqueue_ses_account_reputation_message(self, *args, **kwargs):
-        message = self.build_ses_account_reputation_message(*args, **kwargs)
+        message = self.build_ses_account_reputation_payload(*args, **kwargs)
         self._enqueue_message(message)
         return self
 
-    def build_ses_account_sending_quota_message(self,
+    def build_ses_account_sending_quota_payload(self,
                                                 threshold_name,
                                                 current_percent,
                                                 threshold_percent,
@@ -161,7 +161,7 @@ class SlackService(HttpClient):
 
         return payload
 
-    def build_ses_account_reputation_message(self,
+    def build_ses_account_reputation_payload(self,
                                              threshold_name,
                                              metrics,
                                              ts=None):
