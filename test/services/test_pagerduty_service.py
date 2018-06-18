@@ -36,7 +36,7 @@ def ses_account_sending_quota_trigger_event_payload():
                         'group': 'aws-undefined',
                         'severity': 'critical',
                         'source': 'undefined-undefined-undefined-ses-account-monitor',
-                        'summary': 'SES account sending quota has reached capacity.',
+                        'summary': 'SES account sending quota is at capacity.',
                         'timestamp': '2018-01-01T00:00:00'},
             'routing_key': '12345'}
 
@@ -49,7 +49,9 @@ def ses_account_reputation_trigger_event_payload():
             'event_action': 'trigger',
             'payload': {'class': 'ses_account_reputation',
                         'component': 'ses',
-                        'custom_details': {'aws_account_name': 'undefined',
+                        'custom_details': {'action': 'pause',
+                                           'action_message': 'SES account sending is paused.',
+                                           'aws_account_name': 'undefined',
                                            'aws_environment': 'undefined',
                                            'aws_region': 'undefined',
                                            'bounce_rate': '100.00%',
@@ -63,7 +65,7 @@ def ses_account_reputation_trigger_event_payload():
                         'group': 'aws-undefined',
                         'severity': 'critical',
                         'source': 'undefined-undefined-undefined-ses-account-monitor',
-                        'summary': 'SES account reputation has reached dangerous levels.',
+                        'summary': 'SES account reputation is at dangerous levels.',
                         'timestamp': '2018-01-01T00:00:00'},
             'routing_key': '12345'}
 
@@ -129,7 +131,8 @@ def test_build_ses_account_reputation_trigger_event_payload(service,
                                                             is8601_date):
     result = service.build_ses_account_reputation_trigger_event_payload(metrics=metrics,
                                                                         event_ts=is8601_date,
-                                                                        metric_ts=is8601_date)
+                                                                        metric_ts=is8601_date,
+                                                                        action='pause')
 
     assert result == ses_account_reputation_trigger_event_payload
 

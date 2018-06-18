@@ -3,20 +3,20 @@ from collections import deque
 
 from ses_account_monitor.clients.http_client import HttpClient
 
-from ses_account_monitor.config import (
-    PAGER_DUTY_SERVICE_CONFIG,
-    THRESHOLD_CRITICAL,
-    THRESHOLD_OK,
-    THRESHOLD_WARNING)
+from ses_account_monitor.config import PAGER_DUTY_SERVICE_CONFIG
 
 from ses_account_monitor.util import (
     current_iso8601_timestamp,
     current_unix_timestamp)
 
+ACTION_ALERT = 'alert'
+ACTION_PAUSE = 'pause'
+
 MAX_PAYLOAD_SIZE = (512 << 10)
 
 SES_ACCOUNT_SENDING_QUOTA_CLASS_TYPE = 'ses_account_sending_quota'
 SES_ACCOUNT_REPUTATION_CLASS_TYPE = 'ses_account_reputation'
+
 
 class PagerDutyService(HttpClient):
     '''
@@ -99,7 +99,7 @@ class PagerDutyService(HttpClient):
         return self
 
     def build_ses_account_sending_quota_trigger_event_payload(self, sent_emails, max_emails, event_ts=None, metric_ts=None):
-        return self._build_trigger_payload(summary='SES account sending quota has reached capacity.',
+        return self._build_trigger_payload(summary='SES account sending quota is at capacity.',
                                            severity='critical',
                                            class_type=SES_ACCOUNT_SENDING_QUOTA_CLASS_TYPE,
                                            event_action='trigger',
@@ -108,13 +108,13 @@ class PagerDutyService(HttpClient):
                                            client='AWS Console',
                                            client_url=self.config.ses_console_url)
 
-    def build_ses_account_reputation_trigger_event_payload(self, metrics, event_ts=None, metric_ts=None):
-        return self._build_trigger_payload(summary='SES account reputation has reached dangerous levels.',
+    def build_ses_account_reputation_trigger_event_payload(self, metrics, event_ts=None, metric_ts=None, action='alert'):
+        return self._build_trigger_payload(summary='SES account reputation is at dangerous levels.',
                                            severity='critical',
                                            class_type=SES_ACCOUNT_REPUTATION_CLASS_TYPE,
                                            event_action='trigger',
                                            timestamp=event_ts,
-                                           custom_details=self._build_ses_reputation_custom_details(metrics, metric_ts),
+                                           custom_details=self._build_ses_reputation_custom_details(action, metrics, metric_ts),
                                            client='AWS Console',
                                            client_url=self.config.ses_console_url)
 
@@ -169,14 +169,21 @@ class PagerDutyService(HttpClient):
             'version': 'v1.2018.06.18'
         }
 
-    def _build_ses_reputation_custom_details(self, metrics, ts=None):
+    def _build_ses_reputation_custom_details(self, action, metrics, ts=None):
         details = {
             'aws_account_name': self.config.aws_account_name,
             'aws_region': self.config.aws_region,
             'aws_environment': self.config.aws_environment,
             'ts': (ts or current_unix_timestamp()),
-            'version': 'v1.2018.06.18'
+            'version': 'v1.2018.06.18',
+            'action': action
         }
+
+        if action == ACTION_PAUSE:
+            details['action_message'] = 'SES account sending is paused.'
+
+        if action == ACTION_ALERT:
+            details['action_message'] = 'SES account is in danger of being suspended.'
 
         for label, current_percent, threshold_percent, ts in metrics:
             name = label.replace(' ', '_').lower()
