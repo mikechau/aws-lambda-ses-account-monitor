@@ -2,7 +2,7 @@
 import pytest
 import responses
 
-from ses_account_monitor.clients.pagerduty_client import PagerDutyClient
+from ses_account_monitor.services.pagerduty_service import PagerDutyService
 
 
 @pytest.fixture()
@@ -11,10 +11,9 @@ def webhook_url():
 
 
 @pytest.fixture()
-def client(webhook_url):
-    pagerduty_client = PagerDutyClient(webhook_url)
-    pagerduty_client.logger.setLevel('INFO')
-    return pagerduty_client
+def service(webhook_url):
+    pagerduty_service = PagerDutyService(webhook_url)
+    return pagerduty_service
 
 
 @pytest.fixture()
@@ -51,7 +50,7 @@ def trigger_payload():
 
 
 @responses.activate
-def test_post_message(client, webhook_url, trigger_payload):
+def test_post_message(service, webhook_url, trigger_payload):
     with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
         rsps.add(
             responses.POST,
@@ -64,6 +63,6 @@ def test_post_message(client, webhook_url, trigger_payload):
             }
         )
 
-        response = client.post_json(trigger_payload)
+        result = service.post_json(trigger_payload)
 
-        assert response.status_code == 202
+        assert result.status_code == 202
