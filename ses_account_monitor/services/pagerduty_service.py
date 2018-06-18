@@ -61,13 +61,18 @@ class PagerDutyService(HttpClient):
         send_status = (not dry_run)
 
         if dry_run or self.dry_run:
-            self.logger.debug('PagerDuty DRY RUN enabled, not sending notifications!')
+            self.logger.debug('PagerDuty DRY RUN enabled, not sending %s notifications!', len(self.events))
             responses.extend(self.events)
             self.events.clear()
             return responses
 
+        self.logger.debug('PagerDuty event count: %s', len(self.events))
+
         while self.events:
             event = self.events.popleft()
+
+            self.logger.debug('Sending PagerDuty %s event...', event.get('payload', {}).get('class', ''))
+
             response = self.post_json(payload=event)
             responses.append(response)
 
