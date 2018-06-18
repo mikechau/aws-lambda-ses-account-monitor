@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 import pytest
 import responses
 
@@ -12,45 +14,83 @@ def webhook_url():
 
 @pytest.fixture()
 def service(webhook_url):
-    pagerduty_service = PagerDutyService(webhook_url)
+    pagerduty_service = PagerDutyService(url=webhook_url, routing_key='12345')
     return pagerduty_service
 
 
 @pytest.fixture()
-def trigger_payload():
-    return {
-        'payload': {
-            'summary': 'Example alert on host1.example.com',
-            'timestamp': '2015-07-17T08:42:58.315+0000',
-            'source': 'monitoringtool:cloudvendor:central-region-dc-01:852559987:cluster/api-stats-prod-003',
-            'severity': 'info',
-            'component': 'postgres',
-            'group': 'prod-datapipe',
-            'class': 'deploy',
-            'custom_details': {
-                'ping time': '1500ms',
-                'load avg': 0.75
-            }
-        },
-        'routing_key': 'samplekeyhere',
-        'dedup_key': 'samplekeyhere',
-        'images': [{
-            'src': 'https://www.pagerduty.com/wp-content/uploads/2016/05/pagerduty-logo-green.png',
-            'href': 'https://example.com/',
-            'alt': 'Example text'
-        }],
-        'links': [{
-            'href': 'https://example.com/',
-            'text': 'Link text'
-        }],
-        'event_action': 'trigger',
-        'client': 'Sample Monitoring Service',
-        'client_url': 'https://monitoring.example.com'
-    }
+def ses_account_sending_quota_trigger_event_payload():
+    return {'client': 'AWS Console',
+            'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
+            'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
+            'event_action': 'trigger',
+            'payload': {'class': 'ses_account_sending_quota',
+                        'component': 'ses',
+                        'custom_details': {'aws_account_name': 'undefined',
+                                           'aws_environment': 'undefined',
+                                           'aws_region': 'undefined',
+                                           'max_emails': 5,
+                                           'sent_emails': 10,
+                                           'ts': '2018-01-01T00:00:00',
+                                           'version': 'v1.2018.06.18'},
+                        'group': 'aws-undefined',
+                        'severity': 'critical',
+                        'source': 'undefined-undefined-undefined-ses-account-monitor',
+                        'summary': 'SES account sending quota has reached capacity.',
+                        'timestamp': '2018-01-01T00:00:00'},
+            'routing_key': '12345'}
+
+
+@pytest.fixture()
+def ses_account_reputation_trigger_event_payload():
+    return {'client': 'AWS Console',
+            'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
+            'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_reputation',
+            'event_action': 'trigger',
+            'payload': {'class': 'ses_account_reputation',
+                        'component': 'ses',
+                        'custom_details': {'aws_account_name': 'undefined',
+                                           'aws_environment': 'undefined',
+                                           'aws_region': 'undefined',
+                                           'bounce_rate': '100.00%',
+                                           'bounce_rate_threshold': '100.00%',
+                                           'bounce_rate_timestamp': '2018-01-01 00:00:00',
+                                           'complaint_rate': '100.00%',
+                                           'complaint_rate_threshold': '100.00%',
+                                           'complaint_rate_timestamp': '2018-01-01 00:00:00',
+                                           'ts': '2018-01-01T00:00:00',
+                                           'version': 'v1.2018.06.18'},
+                        'group': 'aws-undefined',
+                        'severity': 'critical',
+                        'source': 'undefined-undefined-undefined-ses-account-monitor',
+                        'summary': 'SES account reputation has reached dangerous levels.',
+                        'timestamp': '2018-01-01T00:00:00'},
+            'routing_key': '12345'}
+
+
+@pytest.fixture()
+def build_resolve_event_payload():
+    def _build_resolve_event_payload(target):
+        return {'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/{}'.format(target),
+                'event_action': 'resolve',
+                'routing_key': '12345'}
+
+    return _build_resolve_event_payload
+
+
+@pytest.fixture()
+def is8601_date():
+    return datetime(2018, 1, 1, 0, 0, 0, 0).isoformat()
+
+
+@pytest.fixture()
+def metrics():
+    return [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
+            ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
 
 
 @responses.activate
-def test_post_message(service, webhook_url, trigger_payload):
+def test_post_message(service, webhook_url):
     with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
         rsps.add(
             responses.POST,
@@ -63,6 +103,73 @@ def test_post_message(service, webhook_url, trigger_payload):
             }
         )
 
-        result = service.post_json(trigger_payload)
+        result = service.post_json({})
 
         assert result.status_code == 202
+
+
+def test_build_ses_account_sending_quota_trigger_event_payload(service, ses_account_sending_quota_trigger_event_payload, is8601_date):
+    result = service.build_ses_account_sending_quota_trigger_event_payload(sent_emails=10,
+                                                                           max_emails=5,
+                                                                           event_ts=is8601_date,
+                                                                           metric_ts=is8601_date)
+
+    assert result == ses_account_sending_quota_trigger_event_payload
+
+
+def test_build_ses_account_sending_quota_resolve_event_payload(service, build_resolve_event_payload):
+    result = service.build_ses_account_sending_quota_resolve_event_payload()
+
+    assert result == build_resolve_event_payload('ses_account_sending_quota')
+
+
+def test_build_ses_account_reputation_trigger_event_payload(service,
+                                                            metrics,
+                                                            ses_account_reputation_trigger_event_payload,
+                                                            is8601_date):
+    result = service.build_ses_account_reputation_trigger_event_payload(metrics=metrics,
+                                                                        event_ts=is8601_date,
+                                                                        metric_ts=is8601_date)
+
+    assert result == ses_account_reputation_trigger_event_payload
+
+
+def test_build_ses_account_reputation_resolve_event_payload(service, build_resolve_event_payload):
+    result = service.build_ses_account_reputation_resolve_event_payload()
+
+    assert result == build_resolve_event_payload('ses_account_reputation')
+
+
+def test_send_events(service, webhook_url, is8601_date, metrics):
+    with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
+        rsps.add(
+            responses.POST,
+            webhook_url,
+            status=202,
+            json={
+                'status': 'success',
+                'message': 'Event processed',
+                'dedup_key': 'samplekeyhere'
+            }
+        )
+
+        service.enqueue_ses_account_sending_quota_trigger_event(sent_emails=9000,
+                                                                max_emails=9001,
+                                                                event_ts=is8601_date,
+                                                                metric_ts=is8601_date)
+
+        service.enqueue_ses_account_sending_quota_resolve_event()
+
+        service.enqueue_ses_account_reputation_trigger_event(metrics=metrics,
+                                                             event_ts=is8601_date,
+                                                             metric_ts=is8601_date)
+
+        service.enqueue_ses_account_reputation_resolve_event()
+
+        send_status, (request_1, request_2, request_3, request_4) = service.send_notifications()
+
+        assert send_status is True
+        assert request_1.status_code == 202
+        assert request_2.status_code == 202
+        assert request_3.status_code == 202
+        assert request_4.status_code == 202
