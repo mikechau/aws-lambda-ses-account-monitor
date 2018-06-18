@@ -71,7 +71,7 @@ class CloudWatchClient(object):
                         'Period': period,
                         'Stat': 'Average'
                     },
-                    'Label': 'bounce_rate',
+                    'Label': 'Bounce Rate',
                     'ReturnData': True
                 },
                 {
@@ -84,7 +84,7 @@ class CloudWatchClient(object):
                         'Period': period,
                         'Stat': 'Average'
                     },
-                    'Label': 'complaint_rate',
+                    'Label': 'Complaint Rate',
                     'ReturnData': True
                 }
             ],
