@@ -117,8 +117,8 @@ def test_post_message(service, webhook_url):
         assert result.status_code == 200
 
 
-def test_build_ses_account_sending_quota_message(service, ses_account_sending_quota_payload):
-    result = service.build_ses_account_sending_quota_message(threshold_name='CRITICAL',
+def test_build_ses_account_sending_quota_payload(service, ses_account_sending_quota_payload):
+    result = service.build_ses_account_sending_quota_payload(threshold_name='CRITICAL',
                                                              current_percent=100,
                                                              threshold_percent=90,
                                                              sent_emails=9000,
@@ -128,10 +128,10 @@ def test_build_ses_account_sending_quota_message(service, ses_account_sending_qu
     assert result == ses_account_sending_quota_payload
 
 
-def test_build_ses_account_reputation_message(service, ses_account_reputation_payload):
+def test_build_ses_account_reputation_payload(service, ses_account_reputation_payload):
     metrics = [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
                ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
-    result = service.build_ses_account_reputation_message(threshold_name='CRITICAL',
+    result = service.build_ses_account_reputation_payload(threshold_name='CRITICAL',
                                                           metrics=metrics,
                                                           ts=123456789)
 
