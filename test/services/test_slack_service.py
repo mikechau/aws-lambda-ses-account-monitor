@@ -140,6 +140,9 @@ def test_build_ses_account_reputation_message(service, ses_account_reputation_pa
 
 @responses.activate
 def test_send_notifications(service, webhook_url):
+    metrics = [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
+               ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
+
     with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
         rsps.add(
             responses.POST,
@@ -150,24 +153,27 @@ def test_send_notifications(service, webhook_url):
             }
         )
 
-        service.build_ses_account_sending_quota_message(threshold_name='CRITICAL',
-                                                        current_percent=100,
-                                                        threshold_percent=90,
-                                                        sent_emails=9000,
-                                                        max_emails=9000,
-                                                        ts=123456789,
-                                                        enqueue=True)
+        service.enqueue_ses_account_sending_quota_message(threshold_name='CRITICAL',
+                                                          current_percent=100,
+                                                          threshold_percent=90,
+                                                          sent_emails=9000,
+                                                          max_emails=9000,
+                                                          ts=123456789)
 
-        service.build_ses_account_sending_quota_message(threshold_name='CRITICAL',
-                                                        current_percent=100,
-                                                        threshold_percent=90,
-                                                        sent_emails=9000,
-                                                        max_emails=9000,
-                                                        ts=123456789,
-                                                        enqueue=True)
+        service.enqueue_ses_account_sending_quota_message(threshold_name='CRITICAL',
+                                                          current_percent=100,
+                                                          threshold_percent=90,
+                                                          sent_emails=9000,
+                                                          max_emails=9000,
+                                                          ts=123456789)
 
-        send_status, (request_1, request_2) = service.send_notifications()
+        service.enqueue_ses_account_reputation_message(threshold_name='WARNING',
+                                                       metrics=metrics,
+                                                       ts=123456789)
+
+        send_status, (request_1, request_2, request_3) = service.send_notifications()
 
         assert send_status is True
         assert request_1.status_code == 200
         assert request_2.status_code == 200
+        assert request_3.status_code == 200
