@@ -82,14 +82,23 @@ class SlackService(HttpClient):
 
         return (send_status, responses)
 
+    def enqueue_ses_account_sending_quota_message(self, *args, **kwargs):
+        message = self.build_ses_account_sending_quota_message(*args, **kwargs)
+        self._enqueue_message(message)
+        return self
+
+    def enqueue_ses_account_reputation_message(self, *args, **kwargs):
+        message = self.build_ses_account_reputation_message(*args, **kwargs)
+        self._enqueue_message(message)
+        return self
+
     def build_ses_account_sending_quota_message(self,
                                                 threshold_name,
                                                 current_percent,
                                                 threshold_percent,
                                                 sent_emails,
                                                 max_emails,
-                                                ts=None,
-                                                enqueue=False):
+                                                ts=None):
 
         payload = {
             'attachments': [{
@@ -150,25 +159,21 @@ class SlackService(HttpClient):
             'username': 'SES Account Monitor'
         }
 
-        if enqueue:
-            self._enqueue_message(payload)
-
         return payload
 
     def build_ses_account_reputation_message(self,
                                              threshold_name,
                                              metrics,
-                                             ts=None,
-                                             enqueue=False):
+                                             ts=None):
 
-        fallback_message, message = self._build_ses_reputation_messages(threshold_name)
+        fallback_text, primary_text = self._build_ses_reputation_text(threshold_name)
 
         metric_names = ', '.join(map(lambda x: x[0], metrics))
 
-        payload = {
+        message = {
             'attachments': [
                 {
-                    'fallback': fallback_message,
+                    'fallback': fallback_text,
                     'color': self._get_color(threshold_name),
                     'fields': [
                         {
@@ -206,7 +211,7 @@ class SlackService(HttpClient):
             'username': 'SES Account Monitor'
         }
 
-        payload['attachments'].append({
+        message['attachments'].append({
             'title': 'Metrics',
             'value': metric_names
         })
@@ -215,7 +220,7 @@ class SlackService(HttpClient):
             metric_value = '{current:.2%} / {threshold:.2%}'.format(current=current_percent,
                                                                     threshold=threshold_percent)
 
-            payload['attachments'].extend(
+            message['attachments'].extend(
                 [{'title': '{} / Threshold'.format(label),
                   'value': metric_value,
                   'short': True},
@@ -223,31 +228,28 @@ class SlackService(HttpClient):
                   'value': str(ts),
                   'short': True}])
 
-        payload['attachments'].append({
+        message['attachments'].append({
             'title': 'Message',
-            'value': message,
+            'value': primary_text,
             'short': False
         })
 
-        if enqueue:
-            self._enqueue_message(payload)
-
-        return payload
+        return message
 
     def _get_color(self, threshold_name):
         return THRESHOLD_COLOR.get(threshold_name.upper(), '')
 
-    def _build_ses_reputation_messages(self, threshold_name):
+    def _build_ses_reputation_text(self, threshold_name):
         threshold_name = threshold_name.upper()
 
         if (threshold_name == THRESHOLD_CRITICAL) or (threshold_name == THRESHOLD_WARNING):
-            fallback_message = 'SES account reputation has breached {} threshold.'.format(threshold_name)
-            message = 'SES account reputation has breached the {} threshold.'.format(threshold_name)
+            fallback_text = 'SES account reputation has breached {} threshold.'.format(threshold_name)
+            primary_text = 'SES account reputation has breached the {} threshold.'.format(threshold_name)
         elif threshold_name == THRESHOLD_OK:
-            fallback_message = 'SES account reputation has recovered.'
-            message = 'SES account reputation status is {}.'.format(threshold_name)
+            fallback_text = 'SES account reputation has recovered.'
+            primary_text = 'SES account reputation status is {}.'.format(threshold_name)
 
-        return (fallback_message, message)
+        return (fallback_text, primary_text)
 
     def _build_message_with_channels(self, base_payload):
         messages = []
