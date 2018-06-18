@@ -71,6 +71,8 @@ class SlackService(HttpClient):
         while self.messages:
             message = self.messages.popleft()
 
+            self.logger.debug('Slack channel count: %s', len(self.channels))
+
             for channel in self.channels:
                 self.logger.debug('Sending Slack notification to %s...', channel)
 
