@@ -117,6 +117,12 @@ def test_post_message(service, webhook_url):
         assert result.status_code == 200
 
 
+@pytest.fixture()
+def metrics():
+    return [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
+            ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
+
+
 def test_build_ses_account_sending_quota_payload(service, ses_account_sending_quota_payload):
     result = service.build_ses_account_sending_quota_payload(threshold_name='CRITICAL',
                                                              current_percent=100,
@@ -128,9 +134,7 @@ def test_build_ses_account_sending_quota_payload(service, ses_account_sending_qu
     assert result == ses_account_sending_quota_payload
 
 
-def test_build_ses_account_reputation_payload(service, ses_account_reputation_payload):
-    metrics = [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
-               ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
+def test_build_ses_account_reputation_payload(service, ses_account_reputation_payload, metrics):
     result = service.build_ses_account_reputation_payload(threshold_name='CRITICAL',
                                                           metrics=metrics,
                                                           ts=123456789)
@@ -139,10 +143,7 @@ def test_build_ses_account_reputation_payload(service, ses_account_reputation_pa
 
 
 @responses.activate
-def test_send_notifications(service, webhook_url):
-    metrics = [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
-               ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
-
+def test_send_notifications(service, webhook_url, metrics):
     with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
         rsps.add(
             responses.POST,

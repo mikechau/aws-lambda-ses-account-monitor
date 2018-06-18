@@ -47,3 +47,7 @@ def current_unix_timestamp():
     unix = mktime(dt.timetuple())
 
     return int(unix)
+
+
+def current_iso8601_timestamp():
+    return datetime.utcnow().isoformat()

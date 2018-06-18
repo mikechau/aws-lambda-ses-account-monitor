@@ -4,15 +4,24 @@ import os
 from collections import namedtuple
 
 # CONTEXT BUILDERS
+PagerDutyServiceConfig = namedtuple('PagerDutyServiceConfig', ('aws_account_name',
+                                                               'aws_environment',
+                                                               'aws_region',
+                                                               'events_url',
+                                                               'routing_key',
+                                                               'service_name',
+                                                               'ses_console_url',
+                                                               'ses_reputation_dashboard_url'))
+
 SlackServiceConfig = namedtuple('SlackServiceConfig', ('aws_account_name',
                                                        'aws_environment',
                                                        'aws_region',
                                                        'channels',
                                                        'footer_icon_url',
                                                        'icon_emoji',
+                                                       'service_name',
                                                        'ses_console_url',
                                                        'ses_reputation_dashboard_url',
-                                                       'service_name',
                                                        'webhook_url'))
 
 # STATIC CONSTANTS
@@ -33,6 +42,10 @@ LAMBDA_SERVICE_NAME = os.getenv('LAMBDA_SERVICE_NAME', '{account}-{region}-{envi
 # LOG CONSTANTS
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
 
+# PAGERDUTY CONSTANTS
+PAGER_DUTY_EVENTS_URL = os.getenv('PAGER_DUTY_EVENTS_URL', 'https://events.pagerduty.com/v2/enqueue')
+PAGER_DUTY_ROUTING_KEY = os.getenv('PAGER_DUTY_ROUTING_KEY', None)
+
 # SES CONSTANTS
 SES_CONSOLE_URL = os.getenv('SES_CONSOLE_URL',
                             'https://{region}.console.aws.amazon.com/ses/?region={region}'.format(region=LAMBDA_AWS_REGION))
@@ -50,6 +63,15 @@ SLACK_ICON_EMOJI = os.getenv('SLACK_ICON_EMOJI', None)
 SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', None)
 
 # SERVICE CONFIGS
+PAGER_DUTY_SERVICE_CONFIG = PagerDutyServiceConfig(aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
+                                                   aws_environment=LAMBDA_ENVIRONMENT,
+                                                   aws_region=LAMBDA_AWS_REGION,
+                                                   events_url=PAGER_DUTY_EVENTS_URL,
+                                                   routing_key=PAGER_DUTY_ROUTING_KEY,
+                                                   service_name=LAMBDA_SERVICE_NAME,
+                                                   ses_console_url=SES_CONSOLE_URL,
+                                                   ses_reputation_dashboard_url=SES_REPUTATION_DASHBOARD_URL)
+
 SLACK_SERVICE_CONFIG = SlackServiceConfig(aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
                                           aws_environment=LAMBDA_ENVIRONMENT,
                                           aws_region=LAMBDA_AWS_REGION,
