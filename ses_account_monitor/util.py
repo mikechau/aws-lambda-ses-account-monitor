@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 from datetime import datetime
+from time import mktime
 
 
 class CustomJsonEncoder(json.JSONEncoder):
@@ -39,3 +40,10 @@ def json_dump_response_event(class_name, method_name, response=None, details=Non
     }
 
     return json.dumps(event, cls=CustomJsonEncoder)
+
+
+def current_unix_timestamp():
+    dt = datetime.utcnow()
+    unix = mktime(dt.timetuple())
+
+    return int(unix)
