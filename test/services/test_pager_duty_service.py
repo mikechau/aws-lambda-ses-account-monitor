@@ -82,7 +82,7 @@ def build_resolve_event_payload():
 
 
 @pytest.fixture()
-def is8601_date():
+def iso8601_date():
     return datetime(2018, 1, 1, 0, 0, 0, 0).isoformat()
 
 
@@ -111,13 +111,13 @@ def test_post_message(service, webhook_url):
         assert result.status_code == 202
 
 
-def test_build_ses_account_sending_quota_trigger_event_payload(service, ses_account_sending_quota_trigger_event_payload, is8601_date):
+def test_build_ses_account_sending_quota_trigger_event_payload(service, ses_account_sending_quota_trigger_event_payload, iso8601_date):
     result = service.build_ses_account_sending_quota_trigger_event_payload(volume=10,
                                                                            max_volume=10,
                                                                            utilization_percent=100,
                                                                            threshold_percent=100,
-                                                                           event_ts=is8601_date,
-                                                                           metric_ts=is8601_date)
+                                                                           event_ts=iso8601_date,
+                                                                           metric_ts=iso8601_date)
 
     assert result == ses_account_sending_quota_trigger_event_payload
 
@@ -131,10 +131,10 @@ def test_build_ses_account_sending_quota_resolve_event_payload(service, build_re
 def test_build_ses_account_reputation_trigger_event_payload(service,
                                                             metrics,
                                                             ses_account_reputation_trigger_event_payload,
-                                                            is8601_date):
+                                                            iso8601_date):
     result = service.build_ses_account_reputation_trigger_event_payload(metrics=metrics,
-                                                                        event_ts=is8601_date,
-                                                                        metric_ts=is8601_date,
+                                                                        event_ts=iso8601_date,
+                                                                        metric_ts=iso8601_date,
                                                                         action='disable')
 
     assert result == ses_account_reputation_trigger_event_payload
@@ -146,7 +146,7 @@ def test_build_ses_account_reputation_resolve_event_payload(service, build_resol
     assert result == build_resolve_event_payload('ses_account_reputation')
 
 
-def test_send_events(service, webhook_url, is8601_date, metrics):
+def test_send_events(service, webhook_url, iso8601_date, metrics):
     with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
         rsps.add(
             responses.POST,
@@ -163,14 +163,14 @@ def test_send_events(service, webhook_url, is8601_date, metrics):
                                                                 max_volume=9001,
                                                                 utilization_percent=100,
                                                                 threshold_percent=100,
-                                                                event_ts=is8601_date,
-                                                                metric_ts=is8601_date)
+                                                                event_ts=iso8601_date,
+                                                                metric_ts=iso8601_date)
 
         service.enqueue_ses_account_sending_quota_resolve_event()
 
         service.enqueue_ses_account_reputation_trigger_event(metrics=metrics,
-                                                             event_ts=is8601_date,
-                                                             metric_ts=is8601_date)
+                                                             event_ts=iso8601_date,
+                                                             metric_ts=iso8601_date)
 
         service.enqueue_ses_account_reputation_resolve_event()
 

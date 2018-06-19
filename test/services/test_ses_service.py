@@ -43,7 +43,7 @@ def ses_quota_responses():
 
 
 @pytest.fixture()
-def is8601_date():
+def iso8601_date():
     return datetime(2018, 1, 1, 0, 0, 0, 0).isoformat()
 
 
@@ -176,7 +176,7 @@ def test_get_account_sending_remaining_percentage(client, service):
         assert zero_result == 0
 
 
-def test_get_account_sending_stats(client, service, is8601_date):
+def test_get_account_sending_stats(client, service, iso8601_date):
     stubber = Stubber(client)
 
     stubber.add_response('get_send_quota',
@@ -188,6 +188,6 @@ def test_get_account_sending_stats(client, service, is8601_date):
                          {})
 
     with stubber:
-        result = service.get_account_sending_stats(ts=is8601_date)
+        result = service.get_account_sending_stats(ts=iso8601_date)
 
         assert result == (10.0, 50.0, 20.0, '2018-01-01T00:00:00')
