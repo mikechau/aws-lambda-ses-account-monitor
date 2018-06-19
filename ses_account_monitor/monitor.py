@@ -73,6 +73,12 @@ class Monitor(object):
     def notify_config(self):
         return self._notify_config
 
+    def send_notifications(self):
+        self.logger.debug('Sending notifications...')
+        self.pager_duty_service.send_notifications()
+        self.slack_service.send_notifications()
+        self.logger.debug('Finished sending all notifications!')
+
     def handle_ses_sending_quota(self, current_time=None):
         self.logger.debug('Handling SES account sending quota...')
 
@@ -116,10 +122,11 @@ class Monitor(object):
             self._handle_ses_reputation_critical(metrics=metrics,
                                                  current_time=current_time)
         elif metrics.warning:
-            self.logger.debug('SES account reputation has metrics in a WARNING state!')
-
+            self._handle_ses_reputation_warning(metrics=metrics,
+                                                current_time=current_time)
         elif metrics.ok:
-            self.logger.debug('SES account reputation has metrics in a OK state!')
+            self._handle_ses_reputation_ok(metrics=metrics,
+                                           current_time=current_time)
 
     def _set_logger(self, logger):
         if logger:
