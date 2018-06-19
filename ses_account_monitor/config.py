@@ -91,8 +91,7 @@ NOTIFY_CONFIG = NotifyConfig(notify_pager_duty_on_ses_reputation=NOTIFY_PAGER_DU
                              notify_slack_on_ses_sending_quota=NOTIFY_SLACK_ON_SES_SENDING_QUOTA,
                              strategy=NOTIFY_STRATEGY)
 
-PAGER_DUTY_SERVICE_CONFIG = PagerDutyServiceConfig(action=SES_MANAGEMENT_STRATEGY,
-                                                   aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
+PAGER_DUTY_SERVICE_CONFIG = PagerDutyServiceConfig(aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
                                                    aws_environment=LAMBDA_ENVIRONMENT,
                                                    aws_region=LAMBDA_AWS_REGION,
                                                    events_url=PAGER_DUTY_EVENTS_URL,
@@ -101,8 +100,7 @@ PAGER_DUTY_SERVICE_CONFIG = PagerDutyServiceConfig(action=SES_MANAGEMENT_STRATEG
                                                    ses_console_url=SES_CONSOLE_URL,
                                                    ses_reputation_dashboard_url=SES_REPUTATION_DASHBOARD_URL)
 
-SLACK_SERVICE_CONFIG = SlackServiceConfig(action=SES_MANAGEMENT_STRATEGY,
-                                          aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
+SLACK_SERVICE_CONFIG = SlackServiceConfig(aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
                                           aws_environment=LAMBDA_ENVIRONMENT,
                                           aws_region=LAMBDA_AWS_REGION,
                                           channels=SLACK_CHANNELS,

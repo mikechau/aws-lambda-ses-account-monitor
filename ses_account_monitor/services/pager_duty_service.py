@@ -29,7 +29,6 @@ class PagerDutyService(HttpClient):
                  url=None,
                  routing_key=None,
                  config=None,
-                 action=None,
                  dry_run=False,
                  logger=None):
 
@@ -47,7 +46,6 @@ class PagerDutyService(HttpClient):
         super(PagerDutyService, self).__init__(url=url,
                                                logger=logger)
 
-        self.action = (action or self._config.action)
         self.events = deque([])
 
     @property
@@ -188,7 +186,7 @@ class PagerDutyService(HttpClient):
         }
 
     def _build_ses_reputation_custom_details(self, metrics, action=None, ts=None):
-        action = (action or self.action)
+        action = (action or ACTION_ALERT)
 
         details = {
             'aws_account_name': self.config.aws_account_name,

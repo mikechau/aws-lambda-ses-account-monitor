@@ -3,8 +3,7 @@ import os
 
 from collections import namedtuple
 
-SlackServiceConfig = namedtuple('SlackServiceConfig', ('action',
-                                                       'aws_account_name',
+SlackServiceConfig = namedtuple('SlackServiceConfig', ('aws_account_name',
                                                        'aws_environment',
                                                        'aws_region',
                                                        'channels',
