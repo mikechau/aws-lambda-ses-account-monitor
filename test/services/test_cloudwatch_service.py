@@ -8,105 +8,135 @@ from botocore.stub import Stubber
 from ses_account_monitor.services.cloudwatch_service import CloudWatchService
 
 
-class TestWithHealthyMetrics():
-    @pytest.fixture()
-    def client(self):
-        return boto3.client('cloudwatch',
-                            aws_access_key_id='a',
-                            aws_secret_access_key='b',
-                            region_name='us-west-2')
+@pytest.fixture()
+def client():
+    return boto3.client('cloudwatch',
+                        aws_access_key_id='a',
+                        aws_secret_access_key='b',
+                        region_name='us-west-2')
 
-    @pytest.fixture()
-    def service(self, client):
-        return CloudWatchService(client=client)
 
-    @pytest.fixture()
-    def start_datetime(self):
-        return datetime(2018, 6, 17, 1, 41, 25, 787402)
+@pytest.fixture()
+def service(client):
+    return CloudWatchService(client=client)
 
-    @pytest.fixture()
-    def end_datetime(self):
-        return datetime(2018, 6, 17, 2, 11, 25, 787402)
 
-    @pytest.fixture()
-    def current_datetime(self, end_datetime):
-        return end_datetime
+@pytest.fixture()
+def start_datetime():
+    return datetime(2018, 6, 17, 1, 41, 25, 787402)
 
-    @pytest.fixture()
-    def cloudwatch_response(self, end_datetime):
-        return {
-            'MetricDataResults': [
-                {
-                    'Id': 'bounce_rate',
-                    'Label': 'Bounce Rate',
-                    'Timestamps': [
-                        end_datetime,
-                    ],
-                    'Values': [
-                        0.03,
-                    ],
-                    'StatusCode': 'Complete',
-                },
-                {
-                    'Id': 'complaint_rate',
-                    'Label': 'Complaint Rate',
-                    'Timestamps': [
-                        end_datetime
-                    ],
-                    'Values': [
-                        0.0001
-                    ]
-                }
-            ],
-            'NextToken': 'string'
-        }
 
-    @pytest.fixture()
-    def cloudwatch_metric_data_results_params(self, start_datetime, end_datetime):
-        return {
-            'StartTime': start_datetime,
-            'MetricDataQueries': [{'Id': 'bounce_rate',
-                                   'Label': 'Bounce Rate',
-                                   'MetricStat': {'Metric': {'MetricName': 'Reputation.BounceRate',
-                                                             'Namespace': 'AWS/SES'},
-                                                  'Period': 900,
-                                                  'Stat': 'Average'},
-                                   'ReturnData': True},
-                                  {'Id': 'complaint_rate',
-                                   'Label': 'Complaint Rate',
-                                   'MetricStat': {'Metric': {'MetricName': 'Reputation.ComplaintRate',
-                                                             'Namespace': 'AWS/SES'},
-                                                  'Period': 900,
-                                                  'Stat': 'Average'},
-                                   'ReturnData': True}],
-            'EndTime': end_datetime
-        }
+@pytest.fixture()
+def end_datetime():
+    return datetime(2018, 6, 17, 2, 11, 25, 787402)
 
-    @pytest.fixture()
-    def expected_result(self, current_datetime):
+
+@pytest.fixture()
+def current_datetime(end_datetime):
+    return end_datetime
+
+
+@pytest.fixture()
+def metric_data_results_response(end_datetime):
+    return {
+        'MetricDataResults': [
+            {
+                'Id': 'bounce_rate',
+                'Label': 'Bounce Rate',
+                'Timestamps': [
+                    end_datetime,
+                ],
+                'Values': [
+                    0.03,
+                ],
+                'StatusCode': 'Complete',
+            },
+            {
+                'Id': 'complaint_rate',
+                'Label': 'Complaint Rate',
+                'Timestamps': [
+                    end_datetime
+                ],
+                'Values': [
+                    0.0001
+                ]
+            }
+        ],
+        'NextToken': 'string'
+    }
+
+
+@pytest.fixture()
+def metric_data_results_params(start_datetime, end_datetime):
+    return {
+        'StartTime': start_datetime,
+        'MetricDataQueries': [{'Id': 'bounce_rate',
+                               'Label': 'Bounce Rate',
+                               'MetricStat': {'Metric': {'MetricName': 'Reputation.BounceRate',
+                                                         'Namespace': 'AWS/SES'},
+                                              'Period': 900,
+                                              'Stat': 'Average'},
+                               'ReturnData': True},
+                              {'Id': 'complaint_rate',
+                               'Label': 'Complaint Rate',
+                               'MetricStat': {'Metric': {'MetricName': 'Reputation.ComplaintRate',
+                                                         'Namespace': 'AWS/SES'},
+                                              'Period': 900,
+                                              'Stat': 'Average'},
+                               'ReturnData': True}],
+        'EndTime': end_datetime
+    }
+
+
+@pytest.fixture()
+def metric_data_results(current_datetime):
+    return [{'Id': 'bounce_rate',
+             'Label': 'Bounce Rate',
+             'StatusCode': 'Complete',
+             'Timestamps': [current_datetime],
+             'Values': [0.03]},
+            {'Id': 'complaint_rate',
+             'Label': 'Complaint Rate',
+             'Timestamps': [current_datetime],
+             'Values': [0.0001]}]
+
+
+@pytest.fixture()
+def build_metric_data_results(current_datetime):
+    def _build_metric_data_results(bounce_rate_value, complaint_rate_value):
         return [{'Id': 'bounce_rate',
                  'Label': 'Bounce Rate',
                  'StatusCode': 'Complete',
                  'Timestamps': [current_datetime],
-                 'Values': [0.03]},
+                 'Values': [bounce_rate_value]},
                 {'Id': 'complaint_rate',
                  'Label': 'Complaint Rate',
                  'Timestamps': [current_datetime],
-                 'Values': [0.0001]}]
+                 'Values': [complaint_rate_value]}]
+    return _build_metric_data_results
 
-    def test_get_ses_account_reputation_metric_data_results(self,
-                                                            client,
-                                                            service,
-                                                            cloudwatch_response,
-                                                            cloudwatch_metric_data_results_params,
-                                                            end_datetime,
-                                                            expected_result):
 
-        stubber = Stubber(client)
-        stubber.add_response('get_metric_data',
-                             cloudwatch_response,
-                             cloudwatch_metric_data_results_params)
+def test_get_ses_account_reputation_metric_data_results(client,
+                                                        service,
+                                                        metric_data_results_response,
+                                                        metric_data_results_params,
+                                                        end_datetime,
+                                                        metric_data_results):
 
-        with stubber:
-            result = service.get_ses_account_reputation_metric_data(current_time=end_datetime)
-            assert result == expected_result
+    stubber = Stubber(client)
+    stubber.add_response('get_metric_data',
+                         metric_data_results_response,
+                         metric_data_results_params)
+
+    with stubber:
+        result = service.get_ses_account_reputation_metric_data(current_time=end_datetime)
+        assert result == metric_data_results
+
+
+def test_build_ses_account_reputation_metrics(service, build_metric_data_results):
+    metric_data_results = build_metric_data_results(0.05, 0.1)
+
+    result = service.build_ses_account_reputation_metrics(metric_data_results)
+    assert result.critical == [('Complaint Rate', 10.0, '2018-06-17 02:11:25.787402')]
+    assert result.ok == []
+    assert result.warning == [('Bounce Rate', 5.0, '2018-06-17 02:11:25.787402')]
