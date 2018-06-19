@@ -1,35 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
 
-from collections import namedtuple
 from distutils.util import strtobool
 
-# CONTEXT BUILDERS
-NotifyConfig = namedtuple('NotifyConfig', ('notify_pager_duty_on_ses_reputation',
-                                           'notify_pager_duty_on_ses_sending_quota',
-                                           'notify_slack_on_ses_reputation',
-                                           'notify_slack_on_ses_sending_quota',
-                                           'strategy'))
-
-PagerDutyServiceConfig = namedtuple('PagerDutyServiceConfig', ('aws_account_name',
-                                                               'aws_environment',
-                                                               'aws_region',
-                                                               'events_url',
-                                                               'routing_key',
-                                                               'service_name',
-                                                               'ses_console_url',
-                                                               'ses_reputation_dashboard_url'))
-
-SlackServiceConfig = namedtuple('SlackServiceConfig', ('aws_account_name',
-                                                       'aws_environment',
-                                                       'aws_region',
-                                                       'channels',
-                                                       'footer_icon_url',
-                                                       'icon_emoji',
-                                                       'service_name',
-                                                       'ses_console_url',
-                                                       'ses_reputation_dashboard_url',
-                                                       'webhook_url'))
+from ses_account_monitor.configs import (
+    NotifyConfig,
+    PagerDutyServiceConfig,
+    SlackServiceConfig)
 
 # STATIC CONSTANTS
 ACTION_ALERT = 'alert'
@@ -70,14 +47,34 @@ PAGER_DUTY_EVENTS_URL = os.getenv('PAGER_DUTY_EVENTS_URL', 'https://events.pager
 PAGER_DUTY_ROUTING_KEY = os.getenv('PAGER_DUTY_ROUTING_KEY', None)
 
 # SES CONSTANTS
+SES_BOUNCE_RATE_CRITICAL_PERCENT = float(os.getenv('SES_BOUNCE_RATE_CRITICAL_PERCENT', 8))
+SES_BOUNCE_RATE_WARNING_PERCENT = float(os.getenv('SES_BOUNCE_RATE_WARNING_PERCENT', 5))
+
+SES_COMPLAINT_RATE_CRITICAL_PERCENT = float(os.getenv('SES_COMPLAINT_RATE_CRITICAL_PERCENT', 0.4))
+SES_COMPLAINT_RATE_WARNING_PERCENT = float(os.getenv('SES_COMPLAINT_RATE_WARNING_PERCENT', 0.1))
+
+SES_SENDING_QUOTA_WARNING_PERCENT = float(os.getenv('SES_SENDING_QUOTA_WARNING_PERCENT', 80))
+SES_SENDING_QUOTA_CRITICAL_PERCENT = float(os.getenv('SES_SENDING_QUOTA_CRITICAL_PERCENT', 90))
+
 SES_CONSOLE_URL = os.getenv('SES_CONSOLE_URL',
                             'https://{region}.console.aws.amazon.com/ses/?region={region}'.format(region=LAMBDA_AWS_REGION))
 SES_REPUTATION_DASHBOARD_URL = os.getenv('SES_REPUTATION_DASHBOARD_URL', SES_CONSOLE_URL)
+
 SES_REPUTATION_PERIOD = os.getenv('SES_REPUTATION_PERIOD', 900)
 SES_REPUTATION_PERIOD_TIMEDELTA = os.getenv('SES_REPUTATION_PERIOD_TIMEDELTA', 1800)
 
-SES_SENDING_QUOTA_WARNING_PERCENT = int(os.getenv('SES_SENDING_QUOTA_WARNING_PERCENT', 80))
-SES_SENDING_QUOTA_CRITICAL_PERCENT = int(os.getenv('SES_SENDING_QUOTA_CRITICAL_PERCENT', 90))
+SES_THRESHOLDS = {
+    THRESHOLD_CRITICAL: {
+        'bounce_rate': SES_BOUNCE_RATE_CRITICAL_PERCENT,
+        'complaint_rate': SES_COMPLAINT_RATE_CRITICAL_PERCENT,
+        'sending_quota': SES_SENDING_QUOTA_CRITICAL_PERCENT
+    },
+    THRESHOLD_WARNING: {
+        'bounce_rate': SES_BOUNCE_RATE_WARNING_PERCENT,
+        'complaint_rate': SES_COMPLAINT_RATE_WARNING_PERCENT,
+        'sending_quota': SES_SENDING_QUOTA_WARNING_PERCENT
+    }
+}
 
 # SLACK CONSTANTS
 SLACK_CHANNELS = filter(None, os.getenv('SLACK_CHANNELS', '').split(','))

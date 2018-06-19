@@ -2,6 +2,7 @@
 import logging
 
 from ses_account_monitor.services import (
+    CloudWatchService,
     PagerDutyService,
     SesService,
     SlackService)
@@ -27,11 +28,20 @@ THRESHOLDS = {
 
 
 class Monitor(object):
-    def __init__(self, aws_config=None,  notify_config=False, thresholds=None, ses_service=None, slack_service=None, pager_duty_service=None, logger=None):
+    def __init__(self,
+                 aws_config=None,
+                 notify_config=False,
+                 thresholds=None,
+                 cloudwatch_service=None,
+                 ses_service=None,
+                 slack_service=None,
+                 pager_duty_service=None,
+                 logger=None):
         self._notify_config = (notify_config or NOTIFY_CONFIG)
         self._thresholds = (thresholds or THRESHOLDS)
 
         self.ses_service = (ses_service or SesService())
+        self.cloudwatch_service = (cloudwatch_service or CloudWatchService())
         self.pager_duty_service = (pager_duty_service or PagerDutyService())
         self.slack_service = (slack_service or SlackService())
 
@@ -57,19 +67,34 @@ class Monitor(object):
     def notify_config(self):
         return self._notify_config
 
-    def handle_ses_quota(self):
-        current_percent = self.ses_service.get_account_sending_current_percentage()
-        critical_percent = self.ses_service.ses_sending_quota_critical_percent()
-        warning_percent = self.ses_service.ses_sending_quota_warning_percent()
+    def handle_ses_sending_quota(self):
+        self.logger.debug('Handling SES account sending quota...')
 
-        if current_percent >= critical_percent:
-            self._log_handle_ses_quota_request(current_percent, critical_percent, 'CRITICAL')
-            self._log_handle_ses_quota_response(current_percent, critical_percent, 'CRITICAL')
-        elif current_percent >= warning_percent:
-            self._log_handle_ses_quota_request(current_percent, critical_percent, 'WARNING')
-            self._log_handle_ses_quota_response(current_percent, critical_percent, 'WARNING')
+        volume, max_volume, utilization_percent, metric_ts = self.ses_service.get_account_sending_stats()
+
+        critical_percent = self.ses_sending_quota_critical_percent
+        warning_percent = self.ses_sending_quota_warning_percent
+
+        if utilization_percent >= critical_percent:
+            self._handle_ses_sending_quota_critical(utilization_percent=utilization_percent,
+                                                    critical_percent=critical_percent,
+                                                    volume=volume,
+                                                    max_volume=max_volume,
+                                                    metric_ts=metric_ts)
+        elif utilization_percent >= warning_percent:
+            self._handle_ses_sending_quota_warning(utilization_percent=utilization_percent,
+                                                   warning_percent=warning_percent,
+                                                   volume=volume,
+                                                   max_volume=max_volume,
+                                                   metric_ts=metric_ts)
         else:
-            self._log_handle_ses_quota_response(current_percent, critical_percent, 'OK')
+            self._handle_ses_sending_quota_ok(utilization_percent=utilization_percent,
+                                              warning_percent=warning_percent)
+
+    def handle_ses_reputation(self):
+        self.logger.debug('Handling SES account reputation...')
+
+
 
     def _set_logger(self, logger):
         if logger:
@@ -78,9 +103,69 @@ class Monitor(object):
             self._logger = logging.getLogger(self.__module__)
             self._logger.addHandler(logging.NullHandler())
 
-    def _log_handle_ses_quota_request(self, current_percent, threshold_percent, status):
+    def _handle_ses_sending_quota_critical(self, utilization_percent, critical_percent, volume, max_volume, metric_ts):
+        self.logger.debug('SES sending quota is in a CRITICAL state!')
+        self._log_handle_ses_quota_request(utilization_percent, critical_percent, 'CRITICAL')
+
+        if self.notify_config.notify_pager_duty_on_ses_sending_quota:
+            self.logger.debug('Pager Duty alerting is ENABLED, queuing TRIGGER event...')
+            self.pager_duty_service.enqueue_ses_account_sending_quota_trigger_event(volume=volume,
+                                                                                    max_volume=max_volume,
+                                                                                    utilization_percent=utilization_percent,
+                                                                                    threshold_percent=critical_percent,
+                                                                                    metric_ts=metric_ts)
+        else:
+            self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
+
+        if self.notify_config.notify_slack_on_ses_sending_quota:
+            self.logger.debug('Slack notifications is ENABLED, queuing message...')
+
+            self.slack_service.enqueue_ses_account_sending_quota_message(threshold_name=THRESHOLD_CRITICAL,
+                                                                         utilization_percent=utilization_percent,
+                                                                         threshold_percent=critical_percent,
+                                                                         volume=volume,
+                                                                         max_volume=max_volume,
+                                                                         metric_ts=metric_ts)
+        else:
+            self.logger.debug('Slack notifications is DISABLED, skipping...')
+
+        self._log_handle_ses_quota_response(utilization_percent, critical_percent, 'CRITICAL')
+
+    def _handle_ses_sending_quota_warning(self, utilization_percent, warning_percent, volume, max_volume, metric_ts):
+        self.logger.debug('SES sending quota is in a WARNING state!')
+
+        self._log_handle_ses_quota_request(utilization_percent, warning_percent, 'WARNING')
+
+        if self.notify_config.notify_slack_on_ses_sending_quota:
+            self.logger.debug('Slack notifications is ENABLED, queuing message...')
+
+            self.slack_service.enqueue_ses_account_sending_quota_message(threshold_name=THRESHOLD_WARNING,
+                                                                         utilization_percent=utilization_percent,
+                                                                         threshold_percent=warning_percent,
+                                                                         volume=volume,
+                                                                         max_volume=max_volume,
+                                                                         metric_ts=metric_ts)
+        else:
+            self.logger.debug('Slack notifications is DISABLED, skipping...')
+
+        self._log_handle_ses_quota_response(utilization_percent, warning_percent, 'WARNING')
+
+    def _handle_ses_sending_quota_ok(self, utilization_percent, warning_percent):
+        self.logger.debug('SES sending quota is in a OK state!')
+
+        self._log_handle_ses_quota_request(utilization_percent, warning_percent, 'OK')
+
+        if self.notify_config.notify_pager_duty_on_ses_sending_quota:
+            self.logger.debug('Pager Duty alerting is ENABLED, queuing RESOLVE event...')
+            self.pager_duty_service.enqueue_ses_account_sending_quota_resolve_event()
+        else:
+            self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
+
+        self._log_handle_ses_quota_response(utilization_percent, warning_percent, 'OK')
+
+    def _log_handle_ses_quota_request(self, utilization_percent, threshold_percent, status):
         self.logger.debug('SES account sending percentage is at %s%, threshold is at %s, status is %s!',
-                          current_percent,
+                          utilization_percent,
                           threshold_percent,
                           status)
 
@@ -88,14 +173,14 @@ class Monitor(object):
             json_dump_request_event(class_name=self.__class__.__name,
                                     method_name='handle_ses_quota',
                                     details={
-                                        'current_percent': current_percent,
+                                        'utilization_percent': utilization_percent,
                                         'threshold_percent': threshold_percent,
                                         'status': status
                                     }))
 
-    def _log_handle_ses_quota_response(self, current_percent, threshold_percent, status):
+    def _log_handle_ses_quota_response(self, utilization_percent, threshold_percent, status):
         self.logger.debug('SES account sending percentage is at %s%, threshold is at %s, status is %s!',
-                          current_percent,
+                          utilization_percent,
                           threshold_percent,
                           status)
 
@@ -103,7 +188,7 @@ class Monitor(object):
             json_dump_response_event(class_name=self.__class__.__name,
                                      method_name='handle_ses_quota',
                                      details={
-                                         'current_percent': current_percent,
+                                         'utilization_percent': utilization_percent,
                                          'threshold_percent': threshold_percent,
                                          'status': status
                                      }))
