@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+
 from collections import deque
 
 from ses_account_monitor.clients.http_client import HttpClient
@@ -98,13 +100,23 @@ class PagerDutyService(HttpClient):
         self._enqueue_event(event)
         return self
 
-    def build_ses_account_sending_quota_trigger_event_payload(self, sent_emails, max_emails, event_ts=None, metric_ts=None):
+    def build_ses_account_sending_quota_trigger_event_payload(self,
+                                                              volume,
+                                                              max_volume,
+                                                              utilization_percent,
+                                                              threshold_percent,
+                                                              event_ts=None,
+                                                              metric_ts=None):
         return self._build_trigger_payload(summary='SES account sending quota is at capacity.',
                                            severity='critical',
                                            class_type=SES_ACCOUNT_SENDING_QUOTA_CLASS_TYPE,
                                            event_action='trigger',
                                            timestamp=event_ts,
-                                           custom_details=self._build_ses_account_quota_custom_details(sent_emails, max_emails, metric_ts),
+                                           custom_details=self._build_ses_account_quota_custom_details(volume=volume,
+                                                                                                       max_volume=max_volume,
+                                                                                                       utilization=utilization_percent,
+                                                                                                       threshold=threshold_percent,
+                                                                                                       ts=metric_ts),
                                            client='AWS Console',
                                            client_url=self.config.ses_console_url)
 
@@ -160,13 +172,15 @@ class PagerDutyService(HttpClient):
             'event_action': 'resolve'
         }
 
-    def _build_ses_account_quota_custom_details(self, sent_emails, max_emails, ts=None):
+    def _build_ses_account_quota_custom_details(self, volume, max_volume, utilization, threshold, ts=None):
         return {
             'aws_account_name': self.config.aws_account_name,
             'aws_region': self.config.aws_region,
             'aws_environment': self.config.aws_environment,
-            'sent_emails': sent_emails,
-            'max_emails': max_emails,
+            'volume': volume,
+            'max_volume': max_volume,
+            'utilization': '{:.0%}'.format(utilization / 100),
+            'threshold': '{:.0%}'.format(threshold / 100),
             'ts': (ts or current_unix_timestamp()),
             'version': 'v1.2018.06.18'
         }

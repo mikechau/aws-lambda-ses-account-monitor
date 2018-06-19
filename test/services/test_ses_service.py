@@ -141,7 +141,7 @@ def test_get_account_sending_current_percentage(client, service):
         assert zero_result == 0
 
         hundred_result = service.get_account_sending_current_percentage()
-        assert hundred_result == 100
+        assert hundred_result > 100
 
 
 def test_get_account_sending_remaining_percentage(client, service):

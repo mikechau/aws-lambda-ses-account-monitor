@@ -38,9 +38,6 @@ class SesService(object):
 
         usage = ((stats['SentLast24Hours'] / stats['Max24HourSend']) * 100)
 
-        if usage >= 100:
-            return 100
-
         return usage
 
     def get_account_sending_remaining_percentage(self):

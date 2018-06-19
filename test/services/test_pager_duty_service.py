@@ -28,8 +28,10 @@ def ses_account_sending_quota_trigger_event_payload():
                         'custom_details': {'aws_account_name': 'undefined',
                                            'aws_environment': 'undefined',
                                            'aws_region': 'undefined',
-                                           'max_emails': 5,
-                                           'sent_emails': 10,
+                                           'max_volume': 10,
+                                           'volume': 10,
+                                           'utilization': '100%',
+                                           'threshold': '100%',
                                            'ts': '2018-01-01T00:00:00',
                                            'version': 'v1.2018.06.18'},
                         'group': 'aws-undefined',
@@ -110,8 +112,10 @@ def test_post_message(service, webhook_url):
 
 
 def test_build_ses_account_sending_quota_trigger_event_payload(service, ses_account_sending_quota_trigger_event_payload, is8601_date):
-    result = service.build_ses_account_sending_quota_trigger_event_payload(sent_emails=10,
-                                                                           max_emails=5,
+    result = service.build_ses_account_sending_quota_trigger_event_payload(volume=10,
+                                                                           max_volume=10,
+                                                                           utilization_percent=100,
+                                                                           threshold_percent=100,
                                                                            event_ts=is8601_date,
                                                                            metric_ts=is8601_date)
 
@@ -155,8 +159,10 @@ def test_send_events(service, webhook_url, is8601_date, metrics):
             }
         )
 
-        service.enqueue_ses_account_sending_quota_trigger_event(sent_emails=9000,
-                                                                max_emails=9001,
+        service.enqueue_ses_account_sending_quota_trigger_event(volume=9001,
+                                                                max_volume=9001,
+                                                                utilization_percent=100,
+                                                                threshold_percent=100,
                                                                 event_ts=is8601_date,
                                                                 metric_ts=is8601_date)
 
