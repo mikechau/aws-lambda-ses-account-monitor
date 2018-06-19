@@ -134,11 +134,11 @@ class CloudWatchService(object):
                 label, current_value, metric_ts = last_metric
 
                 if current_value >= critical_threshold:
-                    results.critical.append(last_metric)
+                    results.critical.append((label, current_value, critical_threshold, metric_ts))
                 elif current_value >= warning_threshold:
-                    results.warning.append(last_metric)
+                    results.warning.append((label, current_value, warning_threshold, metric_ts))
                 else:
-                    results.ok.append(last_metric)
+                    results.ok.append((label, current_value, warning_threshold, metric_ts))
 
         return results
 

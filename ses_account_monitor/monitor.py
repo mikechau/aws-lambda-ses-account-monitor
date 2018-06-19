@@ -8,9 +8,12 @@ from ses_account_monitor.services import (
     SlackService)
 
 from ses_account_monitor.config import (
+    ACTION_PAUSE,
+    ACTION_ALERT,
     NOTIFY_CONFIG,
     NOTIFY_STRATEGY_LIVE,
     NOTIFY_STRATEGY_SIMULATION,
+    SES_MANAGEMENT_STRATEGY,
     SES_SENDING_QUOTA_WARNING_PERCENT,
     SES_SENDING_QUOTA_CRITICAL_PERCENT,
     THRESHOLD_CRITICAL,
@@ -28,6 +31,7 @@ THRESHOLDS = {
 
 class Monitor(object):
     def __init__(self,
+                 action=None,
                  aws_config=None,
                  notify_config=False,
                  thresholds=None,
@@ -39,6 +43,7 @@ class Monitor(object):
         self._notify_config = (notify_config or NOTIFY_CONFIG)
         self._thresholds = (thresholds or THRESHOLDS)
 
+        self.action = (action or SES_MANAGEMENT_STRATEGY)
         self.ses_service = (ses_service or SesService())
         self.cloudwatch_service = (cloudwatch_service or CloudWatchService())
         self.pager_duty_service = (pager_duty_service or PagerDutyService())
@@ -69,6 +74,10 @@ class Monitor(object):
     def handle_ses_sending_quota(self, current_time=None):
         self.logger.debug('Handling SES account sending quota...')
 
+        if self.action != ACTION_ALERT or self.action != ACTION_PAUSE:
+            self.logger.debug('Action %s is not VALID, skipping!', self.action)
+            return
+
         volume, max_volume, utilization_percent, metric_ts = self.ses_service.get_account_sending_stats(current_time)
 
         critical_percent = self.ses_sending_quota_critical_percent
@@ -93,6 +102,10 @@ class Monitor(object):
     def handle_ses_reputation(self, current_time=None, period=None, period_timedelta=None):
         self.logger.debug('Handling SES account reputation...')
 
+        if self.action != ACTION_ALERT or self.action != ACTION_PAUSE:
+            self.logger.debug('Action %s is not VALID, skipping!', self.action)
+            return
+
         metrics = self.cloudwatch_service.get_ses_account_reputation_metrics(current_time=current_time,
                                                                              period=period,
                                                                              period_timedelta=period_timedelta)
@@ -109,6 +122,33 @@ class Monitor(object):
                                                     ok_count=ok_count,
                                                     metrics=metrics,
                                                     status=THRESHOLD_CRITICAL)
+
+            if self.action == ACTION_PAUSE:
+                self.logger.debug('Monitor configured to PAUSE SES account sending, disabling...')
+                self.ses_service.disable_account_sending()
+            else:
+                self.logger.debug('Monitor configured to ALERT only, not pausing SES account sending.')
+
+            if self.notify_config.notify_pager_duty_on_ses_reputation:
+                self.logger.debug('Pager Duty alerting is ENABLED, queuing TRIGGER event...')
+                self.pager_duty_service.enqueue_ses_account_reputation_trigger_event(metrics=metrics,
+                                                                                     event_ts=current_time,
+                                                                                     metric_ts=current_time,
+                                                                                     action=self.action)
+            else:
+                self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
+
+            if self.notify_config.notify_slack_on_ses_reputation:
+                self.logger.debug('Slack notifications is ENABLED, queuing message...')
+
+                self.slack_service.enqueue_ses_account_reputation_message(threshold_name=THRESHOLD_CRITICAL,
+                                                                          metrics=metrics,
+                                                                          metric_ts=current_time,
+                                                                          action=self.action)
+            else:
+                self.logger.debug('Slack notifications is DISABLED, skipping...')
+
+            self._log_handle_ses_reputation_response()
 
         elif metrics.warning:
             self.logger.debug('SES account reputation has metrics in a WARNING state!')
