@@ -2,8 +2,15 @@
 import os
 
 from collections import namedtuple
+from distutils.util import strtobool
 
 # CONTEXT BUILDERS
+MonitorConfig = namedtuple('MonitorConfig', ('notify_pager_duty_on_ses_reputation',
+                                             'notify_pager_duty_on_ses_sending_quota',
+                                             'notify_slack_on_ses_reputation',
+                                             'notify_slack_on_ses_sending_quota',
+                                             'strategy'))
+
 PagerDutyServiceConfig = namedtuple('PagerDutyServiceConfig', ('aws_account_name',
                                                                'aws_environment',
                                                                'aws_region',
@@ -28,6 +35,9 @@ SlackServiceConfig = namedtuple('SlackServiceConfig', ('aws_account_name',
 ACTION_ALERT = 'alert'
 ACTION_PAUSE = 'pause'
 
+NOTIFY_STRATEGY_LIVE = 'live'
+NOTIFY_STRATEGY_SIMULATION = 'simulation'
+
 THRESHOLD_CRITICAL = 'CRITICAL'
 THRESHOLD_OK = 'OK'
 THRESHOLD_WARNING = 'WARNING'
@@ -47,6 +57,13 @@ LAMBDA_SERVICE_NAME = os.getenv('LAMBDA_SERVICE_NAME', '{account}-{region}-{envi
 
 # LOG CONSTANTS
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+
+# NOTIFY CONSTANTS
+NOTIFY_PAGER_DUTY_ON_SES_REPUTATION = strtobool(os.getenv('NOTIFY_PAGER_DUTY_ON_SES_REPUTATION', 'False'))
+NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA = strtobool(os.getenv('NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA', 'False'))
+NOTIFY_SLACK_ON_SES_REPUTATION = strtobool(os.getenv('NOTIFY_SLACK_ON_SES_REPUTATION', 'False'))
+NOTIFY_SLACK_ON_SES_SENDING_QUOTA = strtobool(os.getenv('NOTIFY_SLACK_ON_SES_SENDING_QUOTA', 'False'))
+NOTIFY_STRATEGY = os.getenv('NOTIFY_STRATEGY', NOTIFY_STRATEGY_LIVE)
 
 # PAGERDUTY CONSTANTS
 PAGER_DUTY_EVENTS_URL = os.getenv('PAGER_DUTY_EVENTS_URL', 'https://events.pagerduty.com/v2/enqueue')
@@ -68,7 +85,13 @@ SLACK_FOOTER_ICON_URL = os.getenv('SLACK_FOOTER_ICON_URL', 'https://platform.sla
 SLACK_ICON_EMOJI = os.getenv('SLACK_ICON_EMOJI', None)
 SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', None)
 
-# SERVICE CONFIGS
+# CONFIGS
+MONITOR_CONFIG = MonitorConfig(notify_pager_duty_on_ses_reputation=NOTIFY_PAGER_DUTY_ON_SES_REPUTATION,
+                               notify_pager_duty_on_ses_sending_quota=NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA,
+                               notify_slack_on_ses_reputation=NOTIFY_SLACK_ON_SES_REPUTATION,
+                               notify_slack_on_ses_sending_quota=NOTIFY_SLACK_ON_SES_SENDING_QUOTA,
+                               strategy=NOTIFY_STRATEGY)
+
 PAGER_DUTY_SERVICE_CONFIG = PagerDutyServiceConfig(aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
                                                    aws_environment=LAMBDA_ENVIRONMENT,
                                                    aws_region=LAMBDA_AWS_REGION,

@@ -4,7 +4,7 @@ from datetime import datetime
 import pytest
 import responses
 
-from ses_account_monitor.services.pagerduty_service import PagerDutyService
+from ses_account_monitor.services.pager_duty_service import PagerDutyService
 
 
 @pytest.fixture()
@@ -14,8 +14,7 @@ def webhook_url():
 
 @pytest.fixture()
 def service(webhook_url):
-    pagerduty_service = PagerDutyService(url=webhook_url, routing_key='12345')
-    return pagerduty_service
+    return PagerDutyService(url=webhook_url, routing_key='12345')
 
 
 @pytest.fixture()

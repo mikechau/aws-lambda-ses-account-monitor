@@ -2,33 +2,23 @@
 import logging
 
 from ses_account_monitor.services import (
+    PagerDutyService,
     SesService,
     SlackService)
+
 from ses_account_monitor.config import (
-    LAMBDA_AWS_REGION,
+    NOTIFY_CONFIG,
+    NOTIFY_STRATEGY_LIVE,
+    NOTIFY_STRATEGY_SIMULATION,
     SES_SENDING_QUOTA_WARNING_PERCENT,
-    SES_SENDING_QUOTA_CRITICAL_PERCENT)
+    SES_SENDING_QUOTA_CRITICAL_PERCENT,
+    THRESHOLD_CRITICAL,
+    THRESHOLD_OK,
+    THRESHOLD_WARNING)
+
 from ses_account_monitor.util import (
     json_dump_request_event,
     json_dump_response_event)
-
-
-NOTIFY_LIVE_STRATEGY = 'live'
-NOTIFY_NOOP_STRATEGY = 'noop'
-
-AWS_CONFIG = {
-    'session_config': {
-        'region_name': LAMBDA_AWS_REGION
-    }
-}
-
-NOTIFY_CONFIG = {
-    'service': {
-        'slack': False,
-        'pagerduty': False
-    },
-    'strategy': NOTIFY_LIVE_STRATEGY
-}
 
 THRESHOLDS = {
     'ses_sending_quota_warning_percent': SES_SENDING_QUOTA_WARNING_PERCENT,
@@ -37,26 +27,19 @@ THRESHOLDS = {
 
 
 class Monitor(object):
-    def __init__(self, aws_config=None,  notify_config=False, thresholds=None, ses_service=None, slack_service=None, logger=None):
-        self._aws_config = (aws_config or AWS_CONFIG)
+    def __init__(self, aws_config=None,  notify_config=False, thresholds=None, ses_service=None, slack_service=None, pager_duty_service=None, logger=None):
         self._notify_config = (notify_config or NOTIFY_CONFIG)
         self._thresholds = (thresholds or THRESHOLDS)
 
-        self._set_ses_service(ses_service)
-        self._set_slack_service(slack_service)
+        self.ses_service = (ses_service or SesService())
+        self.pager_duty_service = (pager_duty_service or PagerDutyService())
+        self.slack_service = (slack_service or SlackService())
+
         self._set_logger(logger)
 
     @property
     def ses_service(self):
         return self._ses_service
-
-    @property
-    def slack_messages(self):
-        return self._message_queue['slack']
-
-    @property
-    def pagerduty_events(self):
-        return self._message_queue['pagerduty']
 
     @property
     def ses_sending_quota_warning_percent(self):
@@ -71,8 +54,8 @@ class Monitor(object):
         return self._logger
 
     @property
-    def notify_strategy(self):
-        return self._notify_config['strategy']
+    def notify_config(self):
+        return self._notify_config
 
     def handle_ses_quota(self):
         current_percent = self.ses_service.get_account_sending_current_percentage()
@@ -88,33 +71,12 @@ class Monitor(object):
         else:
             self._log_handle_ses_quota_response(current_percent, critical_percent, 'OK')
 
-    def is_slack_notify_enabled(self):
-        return self._notify_config['service'].get('slack', False)
-
-    def is_pagerduty_notify_enabled(self):
-        return self._notify_config['service'].get('pagerduty', False)
-
-    def _set_ses_service(self, ses_service):
-        if ses_service:
-            self._ses_service = ses_service
-        else:
-            self._ses_service = SesService(**self._aws_config)
-
-    def _set_slack_service(self, slack_service):
-        if slack_service:
-            self._slack_service = slack_service
-        else:
-            self._slack_service = SlackService()
-
     def _set_logger(self, logger):
         if logger:
             self._logger = logger
         else:
             self._logger = logging.getLogger(self.__module__)
             self._logger.addHandler(logging.NullHandler())
-
-    def _enqueue_message(self, target, message):
-        self._message_queue[target].put(message)
 
     def _log_handle_ses_quota_request(self, current_percent, threshold_percent, status):
         self.logger.debug('SES account sending percentage is at %s%, threshold is at %s, status is %s!',
@@ -138,10 +100,10 @@ class Monitor(object):
                           status)
 
         self.logger.info(
-            json_dump_request_event(class_name=self.__class__.__name,
-                                    method_name='handle_ses_quota',
-                                    details={
-                                        'current_percent': current_percent,
-                                        'threshold_percent': threshold_percent,
-                                        'status': status
-                                    }))
+            json_dump_response_event(class_name=self.__class__.__name,
+                                     method_name='handle_ses_quota',
+                                     details={
+                                         'current_percent': current_percent,
+                                         'threshold_percent': threshold_percent,
+                                         'status': status
+                                     }))
