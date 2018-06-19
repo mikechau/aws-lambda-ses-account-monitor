@@ -8,6 +8,7 @@ import boto3
 from ses_account_monitor.config import LAMBDA_AWS_SESSION_CONFIG
 
 from ses_account_monitor.util import (
+    current_iso8601_timestamp,
     json_dump_request_event,
     json_dump_response_event)
 
@@ -30,14 +31,20 @@ class SesService(object):
     def logger(self):
         return self._logger
 
+    def get_account_sending_stats(self, ts=None):
+        ts = (ts or current_iso8601_timestamp())
+        stats = self.get_account_sending_quota()
+        volume = stats['SentLast24Hours']
+        max_volume = stats['Max24HourSend']
+        usage = self._get_utilization_percentage(volume, max_volume)
+        return (volume, max_volume, usage, ts)
+
     def get_account_sending_quota(self):
         return self.client.get_send_quota()
 
     def get_account_sending_current_percentage(self):
         stats = self.get_account_sending_quota()
-
-        usage = ((stats['SentLast24Hours'] / stats['Max24HourSend']) * 100)
-
+        usage = self._get_utilization_percentage(stats['SentLast24Hours'], stats['Max24HourSend'])
         return usage
 
     def get_account_sending_remaining_percentage(self):
@@ -109,6 +116,9 @@ class SesService(object):
         client = session.client('ses')
 
         return client
+
+    def _get_utilization_percentage(self, current, total):
+        return ((current / total) * 100)
 
     def _log_enable_account_sending_request(self):
         self.logger.debug('Preparing to enable SES account sending...')

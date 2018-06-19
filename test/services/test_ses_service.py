@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 import boto3
 import pytest
 
@@ -38,6 +40,11 @@ def ses_quota_responses():
         'MaxSendRate': 523.0,
         'SentLast24Hours': 123.0
     }, None, True))
+
+
+@pytest.fixture()
+def is8601_date():
+    return datetime(2018, 1, 1, 0, 0, 0, 0).isoformat()
 
 
 def test_get_account_sending_quota(client, service, ses_quota_responses):
@@ -167,3 +174,20 @@ def test_get_account_sending_remaining_percentage(client, service):
 
         zero_result = service.get_account_sending_remaining_percentage()
         assert zero_result == 0
+
+
+def test_get_account_sending_stats(client, service, is8601_date):
+    stubber = Stubber(client)
+
+    stubber.add_response('get_send_quota',
+                         {
+                             'Max24HourSend': 50.0,
+                             'MaxSendRate': 50.0,
+                             'SentLast24Hours': 10.0
+                         },
+                         {})
+
+    with stubber:
+        result = service.get_account_sending_stats(ts=is8601_date)
+
+        assert result == (10.0, 50.0, 20.0, '2018-01-01T00:00:00')
