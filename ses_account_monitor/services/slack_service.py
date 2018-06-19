@@ -32,6 +32,7 @@ class SlackService(HttpClient):
                  url=None,
                  channels=None,
                  config=None,
+                 action=None,
                  dry_run=False,
                  logger=None):
 
@@ -44,6 +45,7 @@ class SlackService(HttpClient):
         super(SlackService, self).__init__(url=url,
                                            logger=logger)
 
+        self.action = (action or self._config.action)
         self.messages = deque([])
         self.channels = (channels or self._config.channels)
 
@@ -208,7 +210,7 @@ class SlackService(HttpClient):
                         },
                         {
                             'title': 'Action',
-                            'value': (action or ACTION_ALERT).upper(),
+                            'value': (action or self.action).upper(),
                             'short': True
                         }
                     ],

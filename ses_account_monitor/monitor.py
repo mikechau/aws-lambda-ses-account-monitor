@@ -14,7 +14,6 @@ from ses_account_monitor.config import (
     SES_SENDING_QUOTA_WARNING_PERCENT,
     SES_SENDING_QUOTA_CRITICAL_PERCENT,
     THRESHOLD_CRITICAL,
-    THRESHOLD_OK,
     THRESHOLD_WARNING)
 
 from ses_account_monitor.util import (
@@ -67,10 +66,10 @@ class Monitor(object):
     def notify_config(self):
         return self._notify_config
 
-    def handle_ses_sending_quota(self):
+    def handle_ses_sending_quota(self, current_time=None):
         self.logger.debug('Handling SES account sending quota...')
 
-        volume, max_volume, utilization_percent, metric_ts = self.ses_service.get_account_sending_stats()
+        volume, max_volume, utilization_percent, metric_ts = self.ses_service.get_account_sending_stats(current_time)
 
         critical_percent = self.ses_sending_quota_critical_percent
         warning_percent = self.ses_sending_quota_warning_percent
@@ -91,10 +90,31 @@ class Monitor(object):
             self._handle_ses_sending_quota_ok(utilization_percent=utilization_percent,
                                               warning_percent=warning_percent)
 
-    def handle_ses_reputation(self):
+    def handle_ses_reputation(self, current_time=None, period=None, period_timedelta=None):
         self.logger.debug('Handling SES account reputation...')
 
+        metrics = self.cloudwatch_service.get_ses_account_reputation_metrics(current_time=current_time,
+                                                                             period=period,
+                                                                             period_timedelta=period_timedelta)
 
+        critical_count = len(metrics.critical_count)
+        warning_count = len(metrics.warning_count)
+        ok_count = len(metrics.ok)
+
+        if metrics.critical:
+            self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_CRITICAL)
+
+            self._log_handle_ses_reputation_request(critical_count=critical_count,
+                                                    warning_count=warning_count,
+                                                    ok_count=ok_count,
+                                                    metrics=metrics,
+                                                    status=THRESHOLD_CRITICAL)
+
+        elif metrics.warning:
+            self.logger.debug('SES account reputation has metrics in a WARNING state!')
+
+        elif metrics.ok:
+            self.logger.debug('SES account reputation has metrics in a OK state!')
 
     def _set_logger(self, logger):
         if logger:
@@ -129,7 +149,7 @@ class Monitor(object):
         else:
             self.logger.debug('Slack notifications is DISABLED, skipping...')
 
-        self._log_handle_ses_quota_response(utilization_percent, critical_percent, 'CRITICAL')
+        self._log_handle_ses_quota_response()
 
     def _handle_ses_sending_quota_warning(self, utilization_percent, warning_percent, volume, max_volume, metric_ts):
         self.logger.debug('SES sending quota is in a WARNING state!')
@@ -148,7 +168,7 @@ class Monitor(object):
         else:
             self.logger.debug('Slack notifications is DISABLED, skipping...')
 
-        self._log_handle_ses_quota_response(utilization_percent, warning_percent, 'WARNING')
+        self._log_handle_ses_quota_response()
 
     def _handle_ses_sending_quota_ok(self, utilization_percent, warning_percent):
         self.logger.debug('SES sending quota is in a OK state!')
@@ -161,7 +181,7 @@ class Monitor(object):
         else:
             self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
 
-        self._log_handle_ses_quota_response(utilization_percent, warning_percent, 'OK')
+        self._log_handle_ses_quota_response()
 
     def _log_handle_ses_quota_request(self, utilization_percent, threshold_percent, status):
         self.logger.debug('SES account sending percentage is at %s%, threshold is at %s, status is %s!',
@@ -178,17 +198,27 @@ class Monitor(object):
                                         'status': status
                                     }))
 
-    def _log_handle_ses_quota_response(self, utilization_percent, threshold_percent, status):
-        self.logger.debug('SES account sending percentage is at %s%, threshold is at %s, status is %s!',
-                          utilization_percent,
-                          threshold_percent,
-                          status)
+    def _log_handle_ses_quota_response(self):
+        self.logger.debug('SES account sending handler complete.')
 
         self.logger.info(
             json_dump_response_event(class_name=self.__class__.__name,
-                                     method_name='handle_ses_quota',
-                                     details={
-                                         'utilization_percent': utilization_percent,
-                                         'threshold_percent': threshold_percent,
-                                         'status': status
-                                     }))
+                                     method_name='handle_ses_quota'))
+
+    def _log_handle_ses_reputation_request(self, critical_count, warning_count, ok_count, metrics, status):
+        self.logger.debug('SES account reputation metrics - critical: %s, warning: %s, ok: %s, status is %s!',
+                          critical_count,
+                          warning_count,
+                          ok_count)
+
+        self.logger.info(
+            json_dump_request_event(class_name=self.__class__.__name,
+                                    method_name='handle_ses_reputation',
+                                    details=metrics))
+
+    def _log_handle_ses_reputation_response(self):
+        self.logger.debug('SES account reputation handler complete.')
+
+        self.logger.info(
+            json_dump_response_event(class_name=self.__class__.__name,
+                                     method_name='handle_ses_reputation'))
