@@ -91,11 +91,11 @@ class TestWithHealthyMetrics():
                  'Values': [0.0001]}]
 
     def test_get_ses_account_reputation_metric_data(self,
-                                                cloudwatch_client,
-                                                cloudwatch_response,
-                                                cloudwatch_expected_params,
-                                                end_datetime,
-                                                expected_result):
+                                                    cloudwatch_client,
+                                                    cloudwatch_response,
+                                                    cloudwatch_expected_params,
+                                                    end_datetime,
+                                                    expected_result):
 
         stubber = Stubber(cloudwatch_client)
 
