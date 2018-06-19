@@ -40,12 +40,12 @@ def ses_account_sending_quota_payload():
                      'value': 'CRITICAL'},
                     {'short': True,
                      'title': 'Threshold',
-                     'value': '9000.00%'},
+                     'value': '90.00%'},
                     {'short': True,
-                     'title': 'Current',
-                     'value': '10000.00%'},
+                     'title': 'Utilization',
+                     'value': '100.00%'},
                     {'short': True,
-                     'title': 'Sent / Max',
+                     'title': 'Volume / Max',
                      'value': '9000 / 9000'},
                     {'short': False,
                      'title': 'Message',
@@ -127,10 +127,10 @@ def metrics():
 
 def test_build_ses_account_sending_quota_payload(service, ses_account_sending_quota_payload):
     result = service.build_ses_account_sending_quota_payload(threshold_name='CRITICAL',
-                                                             current_percent=100,
+                                                             utilization_percent=100,
                                                              threshold_percent=90,
-                                                             sent_emails=9000,
-                                                             max_emails=9000,
+                                                             volume=9000,
+                                                             max_volume=9000,
                                                              ts=123456789)
 
     assert result == ses_account_sending_quota_payload
@@ -157,17 +157,17 @@ def test_send_notifications(service, webhook_url, metrics):
         )
 
         service.enqueue_ses_account_sending_quota_message(threshold_name='CRITICAL',
-                                                          current_percent=100,
+                                                          utilization_percent=100,
                                                           threshold_percent=90,
-                                                          sent_emails=9000,
-                                                          max_emails=9000,
+                                                          volume=9000,
+                                                          max_volume=9000,
                                                           ts=123456789)
 
         service.enqueue_ses_account_sending_quota_message(threshold_name='CRITICAL',
-                                                          current_percent=100,
+                                                          utilization_percent=100,
                                                           threshold_percent=90,
-                                                          sent_emails=9000,
-                                                          max_emails=9000,
+                                                          volume=9000,
+                                                          max_volume=9000,
                                                           ts=123456789)
 
         service.enqueue_ses_account_reputation_message(threshold_name='WARNING',

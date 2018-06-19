@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+
 from collections import deque
 
 from ses_account_monitor.clients.http_client import HttpClient
@@ -98,10 +100,10 @@ class SlackService(HttpClient):
 
     def build_ses_account_sending_quota_payload(self,
                                                 threshold_name,
-                                                current_percent,
+                                                utilization_percent,
                                                 threshold_percent,
-                                                sent_emails,
-                                                max_emails,
+                                                volume,
+                                                max_volume,
                                                 ts=None):
 
         payload = {
@@ -136,17 +138,17 @@ class SlackService(HttpClient):
                     },
                     {
                         'title': 'Threshold',
-                        'value': '{:.2%}'.format(threshold_percent),
+                        'value': '{:.2%}'.format(threshold_percent / 100),
                         'short': True
                     },
                     {
-                        'title': 'Current',
-                        'value': '{:.2%}'.format(current_percent),
+                        'title': 'Utilization',
+                        'value': '{:.2%}'.format(utilization_percent / 100),
                         'short': True
                     },
                     {
-                        'title': 'Sent / Max',
-                        'value': '{sent} / {max}'.format(sent=sent_emails, max=max_emails),
+                        'title': 'Volume / Max',
+                        'value': '{sent} / {max}'.format(sent=volume, max=max_volume),
                         'short': True
                     },
                     {
@@ -219,9 +221,9 @@ class SlackService(HttpClient):
             'username': 'SES Account Monitor'
         }
 
-        for label, current_percent, threshold_percent, ts in metrics:
-            metric_value = '{current:.2%} / {threshold:.2%}'.format(current=current_percent,
-                                                                    threshold=threshold_percent)
+        for label, utilization_percent, threshold_percent, ts in metrics:
+            metric_value = '{utilization:.2%} / {threshold:.2%}'.format(utilization=utilization_percent,
+                                                                        threshold=threshold_percent)
 
             message['attachments'][0]['fields'].extend(
                 [{'title': '{} / Threshold'.format(label),
