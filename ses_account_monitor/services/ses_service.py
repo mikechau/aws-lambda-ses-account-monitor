@@ -5,16 +5,11 @@ import logging
 
 import boto3
 
-from ses_account_monitor.config import LAMBDA_AWS_REGION
+from ses_account_monitor.config import LAMBDA_AWS_SESSION_CONFIG
 
 from ses_account_monitor.util import (
     json_dump_request_event,
     json_dump_response_event)
-
-
-AWS_SESSION_CONFIG = {
-    'region_name': LAMBDA_AWS_REGION
-}
 
 
 class SesService(object):
@@ -23,7 +18,7 @@ class SesService(object):
                  logger=None,
                  session_config=None):
 
-        self._session_config = (session_config or AWS_SESSION_CONFIG)
+        self._session_config = (session_config or LAMBDA_AWS_SESSION_CONFIG)
         self._set_client(client)
         self._set_logger(logger)
 

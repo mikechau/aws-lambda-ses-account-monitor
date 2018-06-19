@@ -35,6 +35,9 @@ THRESHOLD_WARNING = 'WARNING'
 # LAMBDA CONSTANTS
 LAMBDA_AWS_ACCOUNT_NAME = os.getenv('LAMBDA_AWS_ACCOUNT_NAME', 'undefined')
 LAMBDA_AWS_REGION = os.getenv('LAMBDA_AWS_REGION', 'undefined')
+LAMBDA_AWS_SESSION_CONFIG = {
+  'region_name': LAMBDA_AWS_REGION
+}
 LAMBDA_ENVIRONMENT = os.getenv('LAMBDA_ENVIRONMENT', 'undefined')
 LAMBDA_NAME = os.getenv('LAMBDA_NAME', 'ses-account-monitor')
 LAMBDA_SERVICE_NAME = os.getenv('LAMBDA_SERVICE_NAME', '{account}-{region}-{environment}-{name}'.format(account=LAMBDA_AWS_ACCOUNT_NAME,
