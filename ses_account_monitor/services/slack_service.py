@@ -104,7 +104,7 @@ class SlackService(HttpClient):
                                                 threshold_percent,
                                                 volume,
                                                 max_volume,
-                                                ts=None):
+                                                metric_ts=None):
 
         payload = {
             'attachments': [{
@@ -159,7 +159,7 @@ class SlackService(HttpClient):
                 ],
                 'footer': self.config.service_name,
                 'footer_icon': self.config.footer_icon_url,
-                'ts': (ts or current_unix_timestamp())
+                'ts': (metric_ts or current_unix_timestamp())
             }],
             'icon_emoji': self.config.icon_emoji,
             'username': 'SES Account Monitor'
@@ -170,7 +170,7 @@ class SlackService(HttpClient):
     def build_ses_account_reputation_payload(self,
                                              threshold_name,
                                              metrics,
-                                             ts=None,
+                                             metric_ts=None,
                                              action=None):
 
         fallback_text, primary_text = self._build_ses_reputation_text(threshold_name)
@@ -214,7 +214,7 @@ class SlackService(HttpClient):
                     ],
                     'footer': self.config.service_name,
                     'footer_icon': self.config.footer_icon_url,
-                    'ts': (ts or current_unix_timestamp())
+                    'ts': (metric_ts or current_unix_timestamp())
                 }
             ],
             'icon_emoji': self.config.icon_emoji,

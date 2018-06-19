@@ -131,7 +131,7 @@ def test_build_ses_account_sending_quota_payload(service, ses_account_sending_qu
                                                              threshold_percent=90,
                                                              volume=9000,
                                                              max_volume=9000,
-                                                             ts=123456789)
+                                                             metric_ts=123456789)
 
     assert result == ses_account_sending_quota_payload
 
@@ -139,7 +139,7 @@ def test_build_ses_account_sending_quota_payload(service, ses_account_sending_qu
 def test_build_ses_account_reputation_payload(service, ses_account_reputation_payload, metrics):
     result = service.build_ses_account_reputation_payload(threshold_name='CRITICAL',
                                                           metrics=metrics,
-                                                          ts=123456789)
+                                                          metric_ts=123456789)
 
     assert result == ses_account_reputation_payload
 
@@ -161,18 +161,18 @@ def test_send_notifications(service, webhook_url, metrics):
                                                           threshold_percent=90,
                                                           volume=9000,
                                                           max_volume=9000,
-                                                          ts=123456789)
+                                                          metric_ts=123456789)
 
         service.enqueue_ses_account_sending_quota_message(threshold_name='CRITICAL',
                                                           utilization_percent=100,
                                                           threshold_percent=90,
                                                           volume=9000,
                                                           max_volume=9000,
-                                                          ts=123456789)
+                                                          metric_ts=123456789)
 
         service.enqueue_ses_account_reputation_message(threshold_name='WARNING',
                                                        metrics=metrics,
-                                                       ts=123456789)
+                                                       metric_ts=123456789)
 
         send_status, (request_1, request_2, request_3) = service.send_notifications()
 
