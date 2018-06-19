@@ -5,11 +5,11 @@ from collections import namedtuple
 from distutils.util import strtobool
 
 # CONTEXT BUILDERS
-MonitorConfig = namedtuple('MonitorConfig', ('notify_pager_duty_on_ses_reputation',
-                                             'notify_pager_duty_on_ses_sending_quota',
-                                             'notify_slack_on_ses_reputation',
-                                             'notify_slack_on_ses_sending_quota',
-                                             'strategy'))
+NotifyConfig = namedtuple('NotifyConfig', ('notify_pager_duty_on_ses_reputation',
+                                           'notify_pager_duty_on_ses_sending_quota',
+                                           'notify_slack_on_ses_reputation',
+                                           'notify_slack_on_ses_sending_quota',
+                                           'strategy'))
 
 PagerDutyServiceConfig = namedtuple('PagerDutyServiceConfig', ('aws_account_name',
                                                                'aws_environment',
@@ -46,7 +46,7 @@ THRESHOLD_WARNING = 'WARNING'
 LAMBDA_AWS_ACCOUNT_NAME = os.getenv('LAMBDA_AWS_ACCOUNT_NAME', 'undefined')
 LAMBDA_AWS_REGION = os.getenv('LAMBDA_AWS_REGION', 'undefined')
 LAMBDA_AWS_SESSION_CONFIG = {
-  'region_name': LAMBDA_AWS_REGION
+    'region_name': LAMBDA_AWS_REGION
 }
 LAMBDA_ENVIRONMENT = os.getenv('LAMBDA_ENVIRONMENT', 'undefined')
 LAMBDA_NAME = os.getenv('LAMBDA_NAME', 'ses-account-monitor')
@@ -86,11 +86,11 @@ SLACK_ICON_EMOJI = os.getenv('SLACK_ICON_EMOJI', None)
 SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', None)
 
 # CONFIGS
-MONITOR_CONFIG = MonitorConfig(notify_pager_duty_on_ses_reputation=NOTIFY_PAGER_DUTY_ON_SES_REPUTATION,
-                               notify_pager_duty_on_ses_sending_quota=NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA,
-                               notify_slack_on_ses_reputation=NOTIFY_SLACK_ON_SES_REPUTATION,
-                               notify_slack_on_ses_sending_quota=NOTIFY_SLACK_ON_SES_SENDING_QUOTA,
-                               strategy=NOTIFY_STRATEGY)
+NOTIFY_CONFIG = NotifyConfig(notify_pager_duty_on_ses_reputation=NOTIFY_PAGER_DUTY_ON_SES_REPUTATION,
+                             notify_pager_duty_on_ses_sending_quota=NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA,
+                             notify_slack_on_ses_reputation=NOTIFY_SLACK_ON_SES_REPUTATION,
+                             notify_slack_on_ses_sending_quota=NOTIFY_SLACK_ON_SES_SENDING_QUOTA,
+                             strategy=NOTIFY_STRATEGY)
 
 PAGER_DUTY_SERVICE_CONFIG = PagerDutyServiceConfig(aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
                                                    aws_environment=LAMBDA_ENVIRONMENT,
