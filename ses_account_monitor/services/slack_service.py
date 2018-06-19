@@ -224,8 +224,8 @@ class SlackService(HttpClient):
         }
 
         for label, utilization_percent, threshold_percent, ts in metrics:
-            metric_value = '{utilization:.2%} / {threshold:.2%}'.format(utilization=utilization_percent,
-                                                                        threshold=threshold_percent)
+            metric_value = '{utilization:.2%} / {threshold:.2%}'.format(utilization=(utilization_percent / 100),
+                                                                        threshold=(threshold_percent / 100))
 
             message['attachments'][0]['fields'].extend(
                 [{'title': '{} / Threshold'.format(label),

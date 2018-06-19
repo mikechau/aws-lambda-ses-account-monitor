@@ -82,13 +82,13 @@ def ses_account_reputation_payload():
                      'value': 'ALERT'},
                     {'short': True,
                      'title': 'Bounce Rate / Threshold',
-                     'value': '100.00% / 100.00%'},
+                     'value': '1.00% / 100.00%'},
                     {'short': True,
                      'title': 'Bounce Rate Time',
                      'value': '2018-01-01 00:00:00'},
                     {'short': True,
                      'title': 'Complaint Rate / Threshold',
-                     'value': '100.00% / 100.00%'},
+                     'value': '1.00% / 100.00%'},
                     {'short': True,
                      'title': 'Complaint Rate Time',
                      'value': '2018-01-01 00:00:00'},
@@ -121,8 +121,8 @@ def test_post_message(service, webhook_url):
 
 @pytest.fixture()
 def metrics():
-    return [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
-            ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
+    return [('Bounce Rate', 1, 100, datetime(2018, 1, 1, 0, 0, 0, 0)),
+            ('Complaint Rate', 1, 100, datetime(2018, 1, 1, 0, 0, 0, 0))]
 
 
 def test_build_ses_account_sending_quota_payload(service, ses_account_sending_quota_payload):
