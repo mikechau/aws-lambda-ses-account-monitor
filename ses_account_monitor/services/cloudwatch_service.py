@@ -53,9 +53,27 @@ class CloudWatchService(object):
         return self._logger
 
     def get_ses_account_reputation_metrics(self, current_time=None, period=None, period_timedelta=None):
-        return self._get_ses_account_reputation_metrics(current_time=current_time,
-                                                        period=period,
-                                                        period_timedelta=period_timedelta)
+        metric_data = self.get_ses_account_reputation_metric_data(current_time=current_time,
+                                                                  period=period,
+                                                                  period_timedelta=period_timedelta)
+
+        return self.build_ses_account_reputation_metrics(metric_data)
+
+    def get_ses_account_reputation_metric_data(self, current_time=None, period=None, period_timedelta=None):
+        self.logger.debug('Fetching SES account reputation metrics...')
+
+        params = self.get_ses_account_reputation_metric_params(
+            current_time=current_time,
+            period=period,
+            period_timedelta=period_timedelta)
+
+        self._log_get_ses_account_reputation_metrics_request(params)
+
+        response = self.client.get_metric_data(**params)
+
+        self._log_get_ses_account_reputation_metrics_response(response)
+
+        return response['MetricDataResults']
 
     def get_ses_account_reputation_metric_params(self, current_time=None, period=None, period_timedelta=None):
         if period is None:
@@ -100,30 +118,14 @@ class CloudWatchService(object):
             'EndTime': current_time
         }
 
-    def _get_ses_account_reputation_metrics(self, current_time=None, period=None, period_timedelta=None):
-        self.logger.debug('Fetching SES account reputation metrics...')
-
-        params = self.get_ses_account_reputation_metric_params(
-            current_time=current_time,
-            period=period,
-            period_timedelta=period_timedelta)
-
-        self._log_get_ses_account_reputation_metrics_request(params)
-
-        response = self.client.get_metric_data(**params)
-
-        self._log_get_ses_account_reputation_metrics_response(response)
-
-        return response['MetricDataResults']
-
-    def _build_ses_account_reputation_metrics(self, metric_data_results):
+    def build_ses_account_reputation_metrics(self, metric_data):
         thresholds = self.ses_thresholds
 
         results = SesReputationMetrics(critical=[],
                                        ok=[],
                                        warning=[])
 
-        for metric in metric_data_results:
+        for metric in metric_data:
             last_metric = self._get_last_metric(metric)
             critical_threshold = thresholds[THRESHOLD_CRITICAL][metric['Id']]
             warning_threshold = thresholds[THRESHOLD_WARNING][metric['Id']]
