@@ -54,10 +54,6 @@ class Monitor(object):
         self._set_logger(logger)
 
     @property
-    def ses_service(self):
-        return self._ses_service
-
-    @property
     def ses_sending_quota_warning_percent(self):
         return self._thresholds['ses_sending_quota_warning_percent']
 
@@ -82,7 +78,7 @@ class Monitor(object):
     def handle_ses_sending_quota(self, current_time=None):
         self.logger.debug('Handling SES account sending quota...')
 
-        if self.ses_management_strategy != SES_STRATEGY_MANAGED or self.ses_management_strategy != SES_STRATEGY_ALERT:
+        if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
             self.logger.debug('SES management strategy %s is not VALID, skipping!', self.ses_management_strategy)
             return
 
@@ -110,7 +106,7 @@ class Monitor(object):
     def handle_ses_reputation(self, current_time=None, period=None, period_timedelta=None):
         self.logger.debug('Handling SES account reputation...')
 
-        if self.ses_management_strategy != SES_STRATEGY_MANAGED or self.ses_management_strategy != SES_STRATEGY_ALERT:
+        if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
             self.logger.debug('SES management strategy %s is not VALID, skipping!', self.ses_management_strategy)
             return
 
@@ -304,7 +300,7 @@ class Monitor(object):
                           status)
 
         self.logger.info(
-            json_dump_request_event(class_name=self.__class__.__name,
+            json_dump_request_event(class_name=self.__class__.__name__,
                                     method_name='handle_ses_quota',
                                     details={
                                         'utilization_percent': utilization_percent,
@@ -316,7 +312,7 @@ class Monitor(object):
         self.logger.debug('SES account sending handler complete.')
 
         self.logger.info(
-            json_dump_response_event(class_name=self.__class__.__name,
+            json_dump_response_event(class_name=self.__class__.__name__,
                                      method_name='handle_ses_quota'))
 
     def _log_handle_ses_reputation_request(self, metrics, status):
@@ -330,7 +326,7 @@ class Monitor(object):
                           ok_count)
 
         self.logger.info(
-            json_dump_request_event(class_name=self.__class__.__name,
+            json_dump_request_event(class_name=self.__class__.__name__,
                                     method_name='handle_ses_reputation',
                                     details=metrics))
 
@@ -338,5 +334,5 @@ class Monitor(object):
         self.logger.debug('SES account reputation handler complete.')
 
         self.logger.info(
-            json_dump_response_event(class_name=self.__class__.__name,
+            json_dump_response_event(class_name=self.__class__.__name__,
                                      method_name='handle_ses_reputation'))
