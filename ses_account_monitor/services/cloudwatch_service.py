@@ -9,6 +9,7 @@ from datetime import (
 import boto3
 
 from ses_account_monitor.config import (
+    LAMBDA_AWS_SESSION_CONFIG,
     SES_REPUTATION_PERIOD,
     SES_REPUTATION_PERIOD_TIMEDELTA)
 from ses_account_monitor.util import (
@@ -22,7 +23,7 @@ class CloudWatchService(object):
                  reputation_config=None,
                  logger=None,
                  session_config=None):
-        self._session_config = session_config
+        self._session_config = (session_config or LAMBDA_AWS_SESSION_CONFIG)
         self._set_client(client)
         self._set_reputation_config(reputation_config)
         self._set_logger(logger)
