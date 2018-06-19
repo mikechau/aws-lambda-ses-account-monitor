@@ -11,9 +11,12 @@ from ses_account_monitor.configs import (
 # STATIC CONSTANTS
 ACTION_ALERT = 'alert'
 ACTION_PAUSE = 'pause'
+ACTION_UNPAUSE = 'unpause'
+ACTION_ENABLE = 'enable'
+ACTION_DISABLE = 'disable'
 
-NOTIFY_STRATEGY_LIVE = 'live'
-NOTIFY_STRATEGY_SIMULATION = 'simulation'
+SES_STRATEGY_MANAGED = 'managed'
+SES_STRATEGY_ALERT = 'alert'
 
 THRESHOLD_CRITICAL = 'CRITICAL'
 THRESHOLD_OK = 'OK'
@@ -40,7 +43,6 @@ NOTIFY_PAGER_DUTY_ON_SES_REPUTATION = strtobool(os.getenv('NOTIFY_PAGER_DUTY_ON_
 NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA = strtobool(os.getenv('NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA', 'False'))
 NOTIFY_SLACK_ON_SES_REPUTATION = strtobool(os.getenv('NOTIFY_SLACK_ON_SES_REPUTATION', 'False'))
 NOTIFY_SLACK_ON_SES_SENDING_QUOTA = strtobool(os.getenv('NOTIFY_SLACK_ON_SES_SENDING_QUOTA', 'False'))
-NOTIFY_STRATEGY = os.getenv('NOTIFY_STRATEGY', NOTIFY_STRATEGY_LIVE)
 
 # PAGERDUTY CONSTANTS
 PAGER_DUTY_EVENTS_URL = os.getenv('PAGER_DUTY_EVENTS_URL', 'https://events.pagerduty.com/v2/enqueue')
@@ -63,7 +65,7 @@ SES_REPUTATION_DASHBOARD_URL = os.getenv('SES_REPUTATION_DASHBOARD_URL', SES_CON
 SES_REPUTATION_PERIOD = os.getenv('SES_REPUTATION_PERIOD', 900)
 SES_REPUTATION_PERIOD_TIMEDELTA = os.getenv('SES_REPUTATION_PERIOD_TIMEDELTA', 1800)
 
-SES_MANAGEMENT_STRATEGY = os.getenv('SES_MANAGEMENT_STRATEGY', ACTION_ALERT)
+SES_MANAGEMENT_STRATEGY = os.getenv('SES_MANAGEMENT_STRATEGY', SES_STRATEGY_ALERT)
 
 SES_THRESHOLDS = {
     THRESHOLD_CRITICAL: {
@@ -88,8 +90,7 @@ SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', None)
 NOTIFY_CONFIG = NotifyConfig(notify_pager_duty_on_ses_reputation=NOTIFY_PAGER_DUTY_ON_SES_REPUTATION,
                              notify_pager_duty_on_ses_sending_quota=NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA,
                              notify_slack_on_ses_reputation=NOTIFY_SLACK_ON_SES_REPUTATION,
-                             notify_slack_on_ses_sending_quota=NOTIFY_SLACK_ON_SES_SENDING_QUOTA,
-                             strategy=NOTIFY_STRATEGY)
+                             notify_slack_on_ses_sending_quota=NOTIFY_SLACK_ON_SES_SENDING_QUOTA)
 
 PAGER_DUTY_SERVICE_CONFIG = PagerDutyServiceConfig(aws_account_name=LAMBDA_AWS_ACCOUNT_NAME,
                                                    aws_environment=LAMBDA_ENVIRONMENT,

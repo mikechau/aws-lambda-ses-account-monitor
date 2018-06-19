@@ -7,7 +7,6 @@ from ses_account_monitor.clients.http_client import HttpClient
 
 from ses_account_monitor.config import (
     ACTION_ALERT,
-    ACTION_PAUSE,
     SLACK_SERVICE_CONFIG,
     THRESHOLD_CRITICAL,
     THRESHOLD_OK,

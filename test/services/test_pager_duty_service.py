@@ -50,8 +50,8 @@ def ses_account_reputation_trigger_event_payload():
             'event_action': 'trigger',
             'payload': {'class': 'ses_account_reputation',
                         'component': 'ses',
-                        'custom_details': {'action': 'pause',
-                                           'action_message': 'SES account sending is paused.',
+                        'custom_details': {'action': 'disable',
+                                           'action_message': 'SES account sending is disabled.',
                                            'aws_account_name': 'undefined',
                                            'aws_environment': 'undefined',
                                            'aws_region': 'undefined',
@@ -135,7 +135,7 @@ def test_build_ses_account_reputation_trigger_event_payload(service,
     result = service.build_ses_account_reputation_trigger_event_payload(metrics=metrics,
                                                                         event_ts=is8601_date,
                                                                         metric_ts=is8601_date,
-                                                                        action='pause')
+                                                                        action='disable')
 
     assert result == ses_account_reputation_trigger_event_payload
 
