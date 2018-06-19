@@ -7,7 +7,7 @@ from ses_account_monitor.clients.http_client import HttpClient
 
 from ses_account_monitor.config import (
     ACTION_ALERT,
-    ACTION_PAUSE,
+    ACTION_DISABLE,
     PAGER_DUTY_SERVICE_CONFIG)
 
 from ses_account_monitor.util import (
@@ -197,8 +197,8 @@ class PagerDutyService(HttpClient):
             'action': action
         }
 
-        if action == ACTION_PAUSE:
-            details['action_message'] = 'SES account sending is paused.'
+        if action == ACTION_DISABLE:
+            details['action_message'] = 'SES account sending is disabled.'
 
         if action == ACTION_ALERT:
             details['action_message'] = 'SES account is in danger of being suspended.'
