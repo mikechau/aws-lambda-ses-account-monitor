@@ -11,8 +11,8 @@ from ses_account_monitor.config import (
     PAGER_DUTY_SERVICE_CONFIG)
 
 from ses_account_monitor.util import (
-    current_iso8601_timestamp,
-    current_unix_timestamp)
+    iso8601_timestamp,
+    unix_timestamp)
 
 MAX_PAYLOAD_SIZE = (512 << 10)
 
@@ -105,13 +105,13 @@ class PagerDutyService(HttpClient):
                                                               max_volume,
                                                               utilization_percent,
                                                               threshold_percent,
-                                                              event_ts=None,
+                                                              event_iso_ts=None,
                                                               metric_ts=None):
         return self._build_trigger_payload(summary='SES account sending quota is at capacity.',
                                            severity='critical',
                                            class_type=SES_ACCOUNT_SENDING_QUOTA_CLASS_TYPE,
                                            event_action='trigger',
-                                           timestamp=event_ts,
+                                           timestamp=event_iso_ts,
                                            custom_details=self._build_ses_account_quota_custom_details(volume=volume,
                                                                                                        max_volume=max_volume,
                                                                                                        utilization=utilization_percent,
@@ -120,12 +120,16 @@ class PagerDutyService(HttpClient):
                                            client='AWS Console',
                                            client_url=self.config.ses_console_url)
 
-    def build_ses_account_reputation_trigger_event_payload(self, metrics, event_ts=None, metric_ts=None, action=None):
+    def build_ses_account_reputation_trigger_event_payload(self,
+                                                           metrics,
+                                                           event_iso_ts=None,
+                                                           metric_ts=None,
+                                                           action=None):
         return self._build_trigger_payload(summary='SES account reputation is at dangerous levels.',
                                            severity='critical',
                                            class_type=SES_ACCOUNT_REPUTATION_CLASS_TYPE,
                                            event_action='trigger',
-                                           timestamp=event_ts,
+                                           timestamp=event_iso_ts,
                                            custom_details=self._build_ses_reputation_custom_details(metrics=metrics,
                                                                                                     action=action,
                                                                                                     ts=metric_ts),
@@ -150,7 +154,7 @@ class PagerDutyService(HttpClient):
         return {
             'payload': {
                 'summary': summary,
-                'timestamp': (timestamp or current_iso8601_timestamp()),
+                'timestamp': (timestamp or iso8601_timestamp()),
                 'source': self.config.service_name,
                 'severity': severity,
                 'component': 'ses',
@@ -181,7 +185,7 @@ class PagerDutyService(HttpClient):
             'max_volume': max_volume,
             'utilization': '{:.0%}'.format(utilization / 100),
             'threshold': '{:.0%}'.format(threshold / 100),
-            'ts': (ts or current_unix_timestamp()),
+            'ts': str((ts or unix_timestamp())),
             'version': 'v1.2018.06.18'
         }
 
@@ -192,7 +196,7 @@ class PagerDutyService(HttpClient):
             'aws_account_name': self.config.aws_account_name,
             'aws_region': self.config.aws_region,
             'aws_environment': self.config.aws_environment,
-            'ts': (ts or current_unix_timestamp()),
+            'ts': str((ts or unix_timestamp())),
             'version': 'v1.2018.06.18',
             'action': action
         }

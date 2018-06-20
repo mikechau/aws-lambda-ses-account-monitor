@@ -137,9 +137,9 @@ def test_build_ses_account_reputation_metrics(service, build_metric_data_results
     metric_data_results = build_metric_data_results(0.05, 0.1)
 
     result = service.build_ses_account_reputation_metrics(metric_data_results)
-    assert result.critical == [('Complaint Rate', 10.0, 0.4, '2018-06-17 02:11:25.787402')]
+    assert result.critical == [('Complaint Rate', 10.0, 0.4, '2018-06-17T02:11:25.787402')]
     assert result.ok == []
-    assert result.warning == [('Bounce Rate', 5.0, 5.0, '2018-06-17 02:11:25.787402')]
+    assert result.warning == [('Bounce Rate', 5.0, 5.0, '2018-06-17T02:11:25.787402')]
 
 
 def test_get_ses_account_reputation_metrics(client,
@@ -156,6 +156,6 @@ def test_get_ses_account_reputation_metrics(client,
     with stubber:
         result = service.get_ses_account_reputation_metrics(current_time=end_datetime)
         assert result.critical == []
-        assert result.ok == [('Bounce Rate', 3.0, 5.0, '2018-06-17 02:11:25.787402'),
-                             ('Complaint Rate', 0.01, 0.1, '2018-06-17 02:11:25.787402')]
+        assert result.ok == [('Bounce Rate', 3.0, 5.0, '2018-06-17T02:11:25.787402'),
+                             ('Complaint Rate', 0.01, 0.1, '2018-06-17T02:11:25.787402')]
         assert result.warning == []

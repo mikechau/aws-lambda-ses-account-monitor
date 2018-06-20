@@ -42,12 +42,12 @@ def json_dump_response_event(class_name, method_name, response=None, details=Non
     return json.dumps(event, cls=CustomJsonEncoder)
 
 
-def current_unix_timestamp():
-    dt = datetime.utcnow()
-    unix = mktime(dt.timetuple())
-
+def unix_timestamp(dt=None):
+    _dt = (dt or datetime.utcnow())
+    unix = mktime(_dt.timetuple())
     return int(unix)
 
 
-def current_iso8601_timestamp():
-    return datetime.utcnow().isoformat()
+def iso8601_timestamp(dt=None):
+    _dt = (dt or datetime.utcnow())
+    return _dt.isoformat()

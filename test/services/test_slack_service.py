@@ -20,41 +20,45 @@ def service(webhook_url):
 
 @pytest.fixture()
 def ses_account_sending_quota_payload():
-    return {'attachments': [
-        {'color': 'danger',
-         'fallback': 'SES account sending rate has breached CRITICAL threshold.',
-         'fields': [{'short': True,
-                     'title': 'Service',
-                     'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Sending>'},
-                    {'short': True,
-                     'title': 'Account',
-                     'value': 'undefined'},
-                    {'short': True,
-                     'title': 'Region',
-                     'value': 'undefined'},
-                    {'short': True,
-                     'title': 'Environment',
-                     'value': 'undefined'},
-                    {'short': True,
-                     'title': 'Status',
-                     'value': 'CRITICAL'},
-                    {'short': True,
-                     'title': 'Threshold',
-                     'value': '90.00%'},
-                    {'short': True,
-                     'title': 'Utilization',
-                     'value': '100.00%'},
-                    {'short': True,
-                     'title': 'Volume / Max',
-                     'value': '9000 / 9000'},
-                    {'short': False,
-                     'title': 'Message',
-                     'value': 'SES account sending rate has breached the CRITICAL threshold.'}],
-         'footer': 'undefined-undefined-undefined-ses-account-monitor',
-         'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
-         'ts': 123456789}],
-        'icon_emoji': None,
-        'username': 'SES Account Monitor'}
+    return {'attachments': [{'color': 'danger',
+                             'fallback': 'SES account sending rate has breached CRITICAL threshold.',
+                             'fields': [{'short': True,
+                                         'title': 'Service',
+                                         'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Sending>'},
+                                        {'short': True,
+                                         'title': 'Account',
+                                         'value': 'undefined'},
+                                        {'short': True,
+                                         'title': 'Region',
+                                         'value': 'undefined'},
+                                        {'short': True,
+                                         'title': 'Environment',
+                                         'value': 'undefined'},
+                                        {'short': True,
+                                         'title': 'Status',
+                                         'value': 'CRITICAL'},
+                                        {'title': 'Time (UTC)',
+                                         'value': '2018-01-01T00:00:00'},
+                                        {'short': True,
+                                         'title': 'Utilization',
+                                         'value': '100.00%'},
+                                        {'short': True,
+                                         'title': 'Threshold',
+                                         'value': '90.00%'},
+                                        {'short': True,
+                                         'title': 'Volume',
+                                         'value': 9000},
+                                        {'short': True,
+                                         'title': 'Max Volume',
+                                         'value': 9000},
+                                        {'short': False,
+                                         'title': 'Message',
+                                         'value': 'SES account sending rate has breached the CRITICAL threshold.'}],
+                             'footer': 'undefined-undefined-undefined-ses-account-monitor',
+                             'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
+                             'ts': 123456789}],
+            'icon_emoji': None,
+            'username': 'SES Account Monitor'}
 
 
 @pytest.fixture()
@@ -131,7 +135,8 @@ def test_build_ses_account_sending_quota_payload(service, ses_account_sending_qu
                                                              threshold_percent=90,
                                                              volume=9000,
                                                              max_volume=9000,
-                                                             metric_ts=123456789)
+                                                             event_unix_ts=123456789,
+                                                             metric_iso_ts=datetime(2018, 1, 1, 0, 0, 0, 0).isoformat())
 
     assert result == ses_account_sending_quota_payload
 
@@ -139,7 +144,7 @@ def test_build_ses_account_sending_quota_payload(service, ses_account_sending_qu
 def test_build_ses_account_reputation_payload(service, ses_account_reputation_payload, metrics):
     result = service.build_ses_account_reputation_payload(threshold_name='CRITICAL',
                                                           metrics=metrics,
-                                                          metric_ts=123456789)
+                                                          event_unix_ts=123456789)
 
     assert result == ses_account_reputation_payload
 
@@ -161,18 +166,18 @@ def test_send_notifications(service, webhook_url, metrics):
                                                           threshold_percent=90,
                                                           volume=9000,
                                                           max_volume=9000,
-                                                          metric_ts=123456789)
+                                                          event_unix_ts=123456789)
 
         service.enqueue_ses_account_sending_quota_message(threshold_name='CRITICAL',
                                                           utilization_percent=100,
                                                           threshold_percent=90,
                                                           volume=9000,
                                                           max_volume=9000,
-                                                          metric_ts=123456789)
+                                                          event_unix_ts=123456789)
 
         service.enqueue_ses_account_reputation_message(threshold_name='WARNING',
                                                        metrics=metrics,
-                                                       metric_ts=123456789)
+                                                       event_unix_ts=123456789)
 
         send_status, (request_1, request_2, request_3) = service.send_notifications()
 

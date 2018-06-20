@@ -13,7 +13,8 @@ from ses_account_monitor.config import (
     THRESHOLD_WARNING)
 
 from ses_account_monitor.util import (
-    current_unix_timestamp)
+    iso8601_timestamp,
+    unix_timestamp)
 
 THRESHOLD_COLOR = {
     THRESHOLD_CRITICAL: 'danger',
@@ -103,7 +104,8 @@ class SlackService(HttpClient):
                                                 threshold_percent,
                                                 volume,
                                                 max_volume,
-                                                metric_ts=None):
+                                                metric_iso_ts=None,
+                                                event_unix_ts=None):
 
         payload = {
             'attachments': [{
@@ -136,9 +138,8 @@ class SlackService(HttpClient):
                         'short': True
                     },
                     {
-                        'title': 'Threshold',
-                        'value': '{:.2%}'.format(threshold_percent / 100),
-                        'short': True
+                        'title': 'Time (UTC)',
+                        'value': (metric_iso_ts or iso8601_timestamp())
                     },
                     {
                         'title': 'Utilization',
@@ -146,8 +147,18 @@ class SlackService(HttpClient):
                         'short': True
                     },
                     {
-                        'title': 'Volume / Max',
-                        'value': '{sent} / {max}'.format(sent=volume, max=max_volume),
+                        'title': 'Threshold',
+                        'value': '{:.2%}'.format(threshold_percent / 100),
+                        'short': True
+                    },
+                    {
+                        'title': 'Volume',
+                        'value': volume,
+                        'short': True
+                    },
+                    {
+                        'title': 'Max Volume',
+                        'value': max_volume,
                         'short': True
                     },
                     {
@@ -158,7 +169,7 @@ class SlackService(HttpClient):
                 ],
                 'footer': self.config.service_name,
                 'footer_icon': self.config.footer_icon_url,
-                'ts': (metric_ts or current_unix_timestamp())
+                'ts': (event_unix_ts or unix_timestamp())
             }],
             'icon_emoji': self.config.icon_emoji,
             'username': 'SES Account Monitor'
@@ -169,7 +180,7 @@ class SlackService(HttpClient):
     def build_ses_account_reputation_payload(self,
                                              threshold_name,
                                              metrics,
-                                             metric_ts=None,
+                                             event_unix_ts=None,
                                              action=None):
 
         fallback_text, primary_text = self._build_ses_reputation_text(threshold_name)
@@ -213,7 +224,7 @@ class SlackService(HttpClient):
                     ],
                     'footer': self.config.service_name,
                     'footer_icon': self.config.footer_icon_url,
-                    'ts': (metric_ts or current_unix_timestamp())
+                    'ts': (event_unix_ts or unix_timestamp())
                 }
             ],
             'icon_emoji': self.config.icon_emoji,

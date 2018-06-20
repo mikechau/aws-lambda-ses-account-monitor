@@ -150,7 +150,7 @@ class CloudWatchService(object):
         last_index = metric['Timestamps'].index(last_ts)
         last_value = metric['Values'][last_index]
 
-        return (metric['Label'], last_value * 100.0, str(last_ts))
+        return (metric['Label'], last_value * 100.0, last_ts.isoformat())
 
     def _set_client(self, client):
         if client:
