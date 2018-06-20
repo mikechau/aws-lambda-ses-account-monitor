@@ -74,7 +74,7 @@ def end_datetime():
 
 
 @pytest.fixture()
-def metric_data_results_response(end_datetime):
+def metric_data_results_response_ok(end_datetime):
     return {
         'MetricDataResults': [
             {
@@ -96,6 +96,36 @@ def metric_data_results_response(end_datetime):
                 ],
                 'Values': [
                     0.0001
+                ]
+            }
+        ],
+        'NextToken': 'string'
+    }
+
+
+@pytest.fixture()
+def metric_data_results_response_warning(end_datetime):
+    return {
+        'MetricDataResults': [
+            {
+                'Id': 'bounce_rate',
+                'Label': 'Bounce Rate',
+                'Timestamps': [
+                    end_datetime,
+                ],
+                'Values': [
+                    0.03
+                ],
+                'StatusCode': 'Complete',
+            },
+            {
+                'Id': 'complaint_rate',
+                'Label': 'Complaint Rate',
+                'Timestamps': [
+                    end_datetime
+                ],
+                'Values': [
+                    0.0088
                 ]
             }
         ],
@@ -138,8 +168,8 @@ def test_handle_ses_sending_quota_critical(monitor, target_datetime):
 
     result = monitor.handle_ses_sending_quota(target_datetime=target_datetime)
 
-    assert len(result['pagerduty']) == 1
-    assert result['pagerduty'][0] == {
+    assert len(result['pager_duty']) == 1
+    assert result['pager_duty'][0] == {
         'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
         'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
         'routing_key': None,
@@ -180,8 +210,8 @@ def test_handle_ses_sending_quota_warning(monitor, target_datetime):
 
     result = monitor.handle_ses_sending_quota(target_datetime=target_datetime)
 
-    assert len(result['pagerduty']) == 1
-    assert result['pagerduty'][0] == {
+    assert len(result['pager_duty']) == 1
+    assert result['pager_duty'][0] == {
         'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
         'event_action': 'resolve',
         'routing_key': None}
@@ -246,7 +276,7 @@ def test_handle_ses_sending_quota_ok(monitor, target_datetime):
 
     assert result == {
         'slack': deque([]),
-        'pagerduty': deque([{
+        'pager_duty': deque([{
             'event_action': 'resolve',
             'routing_key': None,
             'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota'
@@ -254,14 +284,87 @@ def test_handle_ses_sending_quota_ok(monitor, target_datetime):
     }
 
 
-def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_results_response, metric_data_results_params):
+def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_results_response_warning, metric_data_results_params):
     cloudwatch_stubber = Stubber(monitor.cloudwatch_service.client)
     cloudwatch_stubber.add_response('get_metric_data',
-                                    metric_data_results_response,
+                                    metric_data_results_response_warning,
                                     metric_data_results_params)
 
     cloudwatch_stubber.activate()
 
     result = monitor.handle_ses_reputation(target_datetime=end_datetime)
 
-    assert result is None
+    assert len(result['pager_duty']) == 1
+    assert result['pager_duty'][0] == {'client': 'AWS Console',
+                                       'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
+                                       'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_reputation',
+                                       'event_action': 'trigger',
+                                       'payload': {'class': 'ses_account_reputation',
+                                                   'component': 'ses',
+                                                   'custom_details': {'action': 'alert',
+                                                                      'action_message': 'SES account is in danger of being suspended.',
+                                                                      'aws_account_name': 'undefined',
+                                                                      'aws_environment': 'undefined',
+                                                                      'aws_region': 'undefined',
+                                                                      'complaint_rate': '88.00%',
+                                                                      'complaint_rate_threshold': '40.00%',
+                                                                      'complaint_rate_timestamp': '2018-06-17T02:11:25.787402',
+                                                                      'ts': '1529226685',
+                                                                      'version': 'v1.2018.06.18'},
+                                                   'group': 'aws-undefined',
+                                                   'severity': 'critical',
+                                                   'source': 'undefined-undefined-undefined-ses-account-monitor',
+                                                   'summary': 'SES account reputation is at dangerous levels.',
+                                                   'timestamp': '2018-06-17T02:11:25.787402'},
+                                       'routing_key': None}
+
+    assert len(result['slack']) == 1
+    assert result['slack'][0] == {
+        'attachments': [
+            {'color': 'danger',
+             'fallback': 'SES account reputation has breached CRITICAL threshold.',
+             'fields': [{'short': True,
+                         'title': 'Service',
+                         'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Reputation>'},
+                        {'short': True,
+                         'title': 'Account',
+                         'value': 'undefined'},
+                        {'short': True,
+                         'title': 'Region',
+                         'value': 'undefined'},
+                        {'short': True,
+                         'title': 'Environment',
+                         'value': 'undefined'},
+                        {'short': True,
+                         'title': 'Status',
+                         'value': 'CRITICAL'},
+                        {'short': True,
+                         'title': 'Action',
+                         'value': 'ALERT'},
+                        {'short': True,
+                         'title': 'Complaint Rate / Threshold',
+                         'value': '0.88% / 0.40%'},
+                        {'short': True,
+                         'title': 'Complaint Rate Time',
+                         'value': '2018-06-17T02:11:25.787402'},
+                        {'short': False,
+                         'title': 'Message',
+                         'value': 'SES account reputation has breached the CRITICAL threshold.'}],
+             'footer': 'undefined-undefined-undefined-ses-account-monitor',
+             'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
+             'ts': 1529226685}],
+        'icon_emoji': None,
+        'username': 'SES Account Monitor'}
+
+
+def test_handle_ses_reputation_ok(monitor, end_datetime, metric_data_results_response_ok, metric_data_results_params):
+    cloudwatch_stubber = Stubber(monitor.cloudwatch_service.client)
+    cloudwatch_stubber.add_response('get_metric_data',
+                                    metric_data_results_response_ok,
+                                    metric_data_results_params)
+
+    cloudwatch_stubber.activate()
+
+    result = monitor.handle_ses_reputation(target_datetime=end_datetime)
+
+    assert result == {'pager_duty': deque([]), 'slack': deque([])}

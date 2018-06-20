@@ -32,7 +32,7 @@ def ses_account_sending_quota_trigger_event_payload():
                                            'volume': 10,
                                            'utilization': '100%',
                                            'threshold': '100%',
-                                           'ts': '2018-01-01T00:00:00',
+                                           'ts': '123456789',
                                            'version': 'v1.2018.06.18'},
                         'group': 'aws-undefined',
                         'severity': 'critical',
@@ -61,7 +61,7 @@ def ses_account_reputation_trigger_event_payload():
                                            'complaint_rate': '100.00%',
                                            'complaint_rate_threshold': '100.00%',
                                            'complaint_rate_timestamp': '2018-01-01 00:00:00',
-                                           'ts': '2018-01-01T00:00:00',
+                                           'ts': '123456789',
                                            'version': 'v1.2018.06.18'},
                         'group': 'aws-undefined',
                         'severity': 'critical',
@@ -117,7 +117,7 @@ def test_build_ses_account_sending_quota_trigger_event_payload(service, ses_acco
                                                                            utilization_percent=100,
                                                                            threshold_percent=100,
                                                                            event_iso_ts=iso8601_date,
-                                                                           metric_ts=iso8601_date)
+                                                                           metric_ts=123456789)
 
     assert result == ses_account_sending_quota_trigger_event_payload
 
@@ -134,7 +134,7 @@ def test_build_ses_account_reputation_trigger_event_payload(service,
                                                             iso8601_date):
     result = service.build_ses_account_reputation_trigger_event_payload(metrics=metrics,
                                                                         event_iso_ts=iso8601_date,
-                                                                        metric_ts=iso8601_date,
+                                                                        event_unix_ts=123456789,
                                                                         action='disable')
 
     assert result == ses_account_reputation_trigger_event_payload
@@ -170,7 +170,7 @@ def test_send_events(service, webhook_url, iso8601_date, metrics):
 
         service.enqueue_ses_account_reputation_trigger_event(metrics=metrics,
                                                              event_iso_ts=iso8601_date,
-                                                             metric_ts=123456789)
+                                                             event_unix_ts=123456789)
 
         service.enqueue_ses_account_reputation_resolve_event()
 

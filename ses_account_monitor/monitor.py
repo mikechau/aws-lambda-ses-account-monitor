@@ -124,6 +124,7 @@ class Monitor(object):
 
         target_datetime = (target_datetime or current_datetime())
         event_iso_ts = iso8601_timestamp(target_datetime)
+        event_unix_ts = unix_timestamp(target_datetime)
 
         metrics = self.cloudwatch_service.get_ses_account_reputation_metrics(target_datetime=target_datetime,
                                                                              period=period,
@@ -131,13 +132,17 @@ class Monitor(object):
 
         if metrics.critical:
             self._handle_ses_reputation_critical(metrics=metrics,
-                                                 event_iso_ts=event_iso_ts)
+                                                 event_iso_ts=event_iso_ts,
+                                                 event_unix_ts=event_unix_ts)
         elif metrics.warning:
             self._handle_ses_reputation_warning(metrics=metrics,
-                                                event_iso_ts=event_iso_ts)
+                                                event_iso_ts=event_iso_ts,
+                                                event_unix_ts=event_unix_ts)
         elif metrics.ok:
             self._handle_ses_reputation_ok(metrics=metrics,
-                                           event_iso_ts=event_iso_ts)
+                                           event_unix_ts=event_unix_ts)
+
+        return self._get_pending_notifications()
 
     def _set_logger(self, logger):
         if logger:
@@ -149,7 +154,7 @@ class Monitor(object):
     def _get_pending_notifications(self):
         return {
             'slack': self.slack_service.messages,
-            'pagerduty': self.pager_duty_service.events
+            'pager_duty': self.pager_duty_service.events
         }
 
     def _handle_ses_sending_quota_critical(self, utilization_percent, critical_percent, volume, max_volume, metric_iso_ts, event_iso_ts=None, event_unix_ts=None):
@@ -221,7 +226,7 @@ class Monitor(object):
 
         self._log_handle_ses_quota_response()
 
-    def _handle_ses_reputation_critical(self, metrics, event_iso_ts=None):
+    def _handle_ses_reputation_critical(self, metrics, event_iso_ts=None, event_unix_ts=None):
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_CRITICAL)
 
         self._log_handle_ses_reputation_request(metrics=metrics,
@@ -241,6 +246,7 @@ class Monitor(object):
             self.logger.debug('Pager Duty alerting is ENABLED, queuing TRIGGER event...')
             self.pager_duty_service.enqueue_ses_account_reputation_trigger_event(metrics=danger_metrics,
                                                                                  event_iso_ts=event_iso_ts,
+                                                                                 event_unix_ts=event_unix_ts,
                                                                                  action=action)
         else:
             self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
@@ -250,14 +256,14 @@ class Monitor(object):
 
             self.slack_service.enqueue_ses_account_reputation_message(threshold_name=THRESHOLD_CRITICAL,
                                                                       metrics=danger_metrics,
-                                                                      event_iso_ts=event_iso_ts,
+                                                                      event_unix_ts=event_unix_ts,
                                                                       action=action)
         else:
             self.logger.debug('Slack notifications is DISABLED, skipping...')
 
         self._log_handle_ses_reputation_response()
 
-    def _handle_ses_reputation_warning(self, metrics, event_iso_ts=None):
+    def _handle_ses_reputation_warning(self, metrics, event_unix_ts=None):
         action = ACTION_ALERT
 
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_WARNING)
@@ -281,14 +287,14 @@ class Monitor(object):
 
             self.slack_service.enqueue_ses_account_reputation_message(threshold_name=THRESHOLD_WARNING,
                                                                       metrics=metrics.warning,
-                                                                      event_iso_ts=event_iso_ts,
+                                                                      event_unix_ts=event_unix_ts,
                                                                       action=action)
         else:
             self.logger.debug('Slack notifications is DISABLED, skipping...')
 
         self._log_handle_ses_reputation_response()
 
-    def _handle_ses_reputation_ok(self, metrics, event_iso_ts=None):
+    def _handle_ses_reputation_ok(self, metrics, event_unix_ts=None):
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_OK)
 
         self._log_handle_ses_reputation_request(metrics=metrics,
@@ -306,7 +312,7 @@ class Monitor(object):
 
                     self.slack_service.enqueue_ses_account_reputation_message(threshold_name=THRESHOLD_WARNING,
                                                                               metrics=metrics.warning,
-                                                                              event_iso_ts=event_iso_ts,
+                                                                              event_unix_ts=event_unix_ts,
                                                                               action=ACTION_ENABLE)
                 else:
                     self.logger.debug('Slack notifications is DISABLED, skipping...')
