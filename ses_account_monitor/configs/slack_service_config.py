@@ -26,7 +26,7 @@ Args:
     aws_account_name (str): AWS account name. Ex: supercoolco.
     aws_environment (str): AWS environment name. Ex: prod.
     aws_region (str): AWS region. Ex: us-west-2.
-    channels (list): List of channels to post to. Ex: ['#alerts']
+    channels (:obj:`list` of :obj:`str`): List of channels to post to. Ex: ['#alerts']
     footer_icon_url (str/NoneType): Slack footer icon url.
     icon_emoji (str/NoneType): Slack icon emoji.
     service_name (str): The name of the service. Ex: lambda-ses-account-monitor.
