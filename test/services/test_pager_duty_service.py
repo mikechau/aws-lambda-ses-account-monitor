@@ -7,17 +7,17 @@ import responses
 from ses_account_monitor.services.pager_duty_service import PagerDutyService
 
 
-@pytest.fixture()
+@pytest.fixture
 def webhook_url():
     return 'https://events.pagerduty.com/v2/enqueue'
 
 
-@pytest.fixture()
+@pytest.fixture
 def service(webhook_url):
     return PagerDutyService(url=webhook_url, routing_key='12345')
 
 
-@pytest.fixture()
+@pytest.fixture
 def ses_account_sending_quota_trigger_event_payload():
     return {'client': 'AWS Console',
             'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
@@ -42,7 +42,7 @@ def ses_account_sending_quota_trigger_event_payload():
             'routing_key': '12345'}
 
 
-@pytest.fixture()
+@pytest.fixture
 def ses_account_reputation_trigger_event_payload():
     return {'client': 'AWS Console',
             'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
@@ -71,7 +71,7 @@ def ses_account_reputation_trigger_event_payload():
             'routing_key': '12345'}
 
 
-@pytest.fixture()
+@pytest.fixture
 def build_resolve_event_payload():
     def _build_resolve_event_payload(target):
         return {'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/{}'.format(target),
@@ -81,12 +81,12 @@ def build_resolve_event_payload():
     return _build_resolve_event_payload
 
 
-@pytest.fixture()
+@pytest.fixture
 def iso8601_date():
     return datetime(2018, 1, 1, 0, 0, 0, 0).isoformat()
 
 
-@pytest.fixture()
+@pytest.fixture
 def metrics():
     return [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
             ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]

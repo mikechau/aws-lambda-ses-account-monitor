@@ -7,18 +7,18 @@ import responses
 from ses_account_monitor.services.slack_service import SlackService
 
 
-@pytest.fixture()
+@pytest.fixture
 def webhook_url():
     return 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'
 
 
-@pytest.fixture()
+@pytest.fixture
 def service(webhook_url):
     slack_service = SlackService(url=webhook_url, channels=['#general'])
     return slack_service
 
 
-@pytest.fixture()
+@pytest.fixture
 def ses_account_sending_quota_payload():
     return {'attachments': [{'color': 'danger',
                              'fallback': 'SES account sending rate has breached CRITICAL threshold.',
@@ -61,7 +61,7 @@ def ses_account_sending_quota_payload():
             'username': 'SES Account Monitor'}
 
 
-@pytest.fixture()
+@pytest.fixture
 def ses_account_reputation_payload():
     return {'attachments': [
         {'color': 'danger',
@@ -123,7 +123,7 @@ def test_post_message(service, webhook_url):
         assert result.status_code == 200
 
 
-@pytest.fixture()
+@pytest.fixture
 def metrics():
     return [('Bounce Rate', 1, 100, datetime(2018, 1, 1, 0, 0, 0, 0)),
             ('Complaint Rate', 1, 100, datetime(2018, 1, 1, 0, 0, 0, 0))]
