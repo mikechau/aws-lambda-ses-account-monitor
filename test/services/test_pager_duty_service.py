@@ -174,10 +174,15 @@ def test_send_events(service, webhook_url, iso8601_date, metrics):
 
         service.enqueue_ses_account_reputation_resolve_event()
 
-        send_status, (request_1, request_2, request_3, request_4) = service.send_notifications()
+        send_status, requests = service.send_notifications()
 
         assert send_status is True
-        assert request_1.status_code == 202
-        assert request_2.status_code == 202
-        assert request_3.status_code == 202
-        assert request_4.status_code == 202
+
+        expected_eids = ['trigger::undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
+                         'resolve::undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
+                         'trigger::undefined-undefined-undefined-ses-account-monitor/ses_account_reputation',
+                         'resolve::undefined-undefined-undefined-ses-account-monitor/ses_account_reputation']
+
+        for idx, (eid, request) in enumerate(requests):
+            assert eid == expected_eids[idx]
+            assert request.status_code == 202

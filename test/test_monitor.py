@@ -4,6 +4,7 @@ from datetime import datetime
 
 import boto3
 import pytest
+import responses
 
 from botocore.stub import Stubber
 
@@ -11,7 +12,8 @@ from ses_account_monitor.configs.notify_config import NotifyConfig
 from ses_account_monitor.monitor import Monitor
 from ses_account_monitor.services import (
     CloudWatchService,
-    SesService)
+    SesService,
+    SlackService)
 
 
 @pytest.fixture
@@ -49,8 +51,13 @@ def cloudwatch_service(cloudwatch_client):
 
 
 @pytest.fixture
-def monitor(notify_config, ses_service, cloudwatch_service):
-    return Monitor(notify_config=notify_config, ses_service=ses_service, cloudwatch_service=cloudwatch_service)
+def slack_service():
+    return SlackService(channels=['#general'], url='https://slack.com/webhook')
+
+
+@pytest.fixture
+def monitor(notify_config, ses_service, cloudwatch_service, slack_service):
+    return Monitor(notify_config=notify_config, ses_service=ses_service, cloudwatch_service=cloudwatch_service, slack_service=slack_service)
 
 
 @pytest.fixture
@@ -458,3 +465,50 @@ def test_handle_ses_reputation_ok(monitor, end_datetime, metric_data_results_res
     result = monitor.handle_ses_reputation(target_datetime=end_datetime)
 
     assert result == {'pager_duty': deque([]), 'slack': deque([])}
+
+
+@responses.activate
+def test_send_notifications_critical(monitor, end_datetime, metric_data_results_response_critical, metric_data_results_params):
+    ses_stubber = Stubber(monitor.ses_service.client)
+    ses_stubber.add_response('get_send_quota',
+                             {
+                                 'Max24HourSend': 10.0,
+                                 'MaxSendRate': 523.0,
+                                 'SentLast24Hours': 15.0
+                             },
+                             {})
+    ses_stubber.activate()
+
+    cloudwatch_stubber = Stubber(monitor.cloudwatch_service.client)
+    cloudwatch_stubber.add_response('get_metric_data',
+                                    metric_data_results_response_critical,
+                                    metric_data_results_params)
+    cloudwatch_stubber.activate()
+
+    with responses.RequestsMock(target='botocore.vendored.requests.adapters.HTTPAdapter.send') as rsps:
+        rsps.add(
+            responses.POST,
+            monitor.pager_duty_service.url,
+            status=202,
+            json={
+                'status': 'success',
+                'message': 'Event processed',
+                'dedup_key': 'samplekeyhere'
+            }
+        )
+
+        rsps.add(
+            responses.POST,
+            monitor.slack_service.url,
+            status=200,
+            json={
+                'ok': True
+            }
+        )
+
+        monitor.handle_ses_sending_quota(target_datetime=end_datetime)
+        monitor.handle_ses_reputation(target_datetime=end_datetime)
+        result = monitor.send_notifications(raise_on_errors=True)
+
+        assert len(result['pager_duty']) == 2
+        assert len(result['slack']) == 2

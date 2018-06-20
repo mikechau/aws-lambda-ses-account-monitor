@@ -179,9 +179,10 @@ def test_send_notifications(service, webhook_url, metrics):
                                                        metrics=metrics,
                                                        event_unix_ts=123456789)
 
-        send_status, (request_1, request_2, request_3) = service.send_notifications()
+        send_status, requests = service.send_notifications()
 
         assert send_status is True
-        assert request_1.status_code == 200
-        assert request_2.status_code == 200
-        assert request_3.status_code == 200
+
+        for channel, request in requests:
+            assert channel == '#general'
+            assert request.status_code == 200
