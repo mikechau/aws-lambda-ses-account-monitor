@@ -43,14 +43,14 @@ def json_dump_response_event(class_name, method_name, response=None, details=Non
 
 
 def unix_timestamp(dt=None):
-    _dt = (dt or datetime.utcnow())
-    unix = mktime(_dt.timetuple())
+    dt = (dt or datetime.utcnow())
+    unix = mktime(dt.timetuple())
     return int(unix)
 
 
 def iso8601_timestamp(dt=None):
-    _dt = (dt or datetime.utcnow())
-    return _dt.isoformat()
+    dt = (dt or datetime.utcnow())
+    return dt.isoformat()
 
 def current_datetime():
     return datetime.utcnow()

@@ -11,6 +11,8 @@ from ses_account_monitor.config import (
     ACTION_DISABLE,
     ACTION_ALERT,
     ACTION_ENABLE,
+    MONITOR_SES_REPUTATION,
+    MONITOR_SES_SENDING_QUOTA,
     NOTIFY_CONFIG,
     SES_MANAGEMENT_STRATEGY,
     SES_STRATEGY_ALERT,
@@ -48,10 +50,14 @@ class Monitor(object):
                  ses_service=None,
                  slack_service=None,
                  pager_duty_service=None,
+                 monitor_ses_reputation=MONITOR_SES_REPUTATION,
+                 monitor_ses_sending_quota=MONITOR_SES_SENDING_QUOTA,
                  logger=None):
         self._notify_config = (notify_config or NOTIFY_CONFIG)
         self._thresholds = (thresholds or THRESHOLDS)
 
+        self.monitor_ses_reputation = monitor_ses_reputation
+        self.monitor_ses_sending_quota = monitor_ses_sending_quota
         self.ses_management_strategy = (ses_management_strategy or SES_MANAGEMENT_STRATEGY)
         self.ses_service = (ses_service or SesService())
         self.cloudwatch_service = (cloudwatch_service or CloudWatchService())
@@ -88,6 +94,10 @@ class Monitor(object):
         return self._get_notification_responses()
 
     def handle_ses_sending_quota(self, target_datetime=None):
+        if not self.monitor_ses_sending_quota:
+            self.logger.debug('Handling SES account sending quota is DISABLED, skipping...')
+            return
+
         self.logger.debug('Handling SES account sending quota...')
 
         if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
@@ -125,6 +135,10 @@ class Monitor(object):
         return self._get_pending_notifications()
 
     def handle_ses_reputation(self, target_datetime=None, period=None, period_timedelta=None):
+        if not self.monitor_ses_reputation:
+            self.logger.debug('Handling SES reputation is DISABLED, skipping...')
+            return
+
         self.logger.debug('Handling SES account reputation...')
 
         if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
