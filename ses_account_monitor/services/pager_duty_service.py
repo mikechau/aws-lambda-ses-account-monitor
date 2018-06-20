@@ -47,6 +47,7 @@ class PagerDutyService(HttpClient):
                                                logger=logger)
 
         self.events = deque([])
+        self.responses = []
 
     @property
     def config(self):
@@ -59,26 +60,35 @@ class PagerDutyService(HttpClient):
     def send_notifications(self, dry_run=None):
         self.logger.debug('Sending events to PagerDuty...')
 
-        responses = []
+        self.responses = []
         send_status = (not dry_run)
 
         if dry_run or self.dry_run:
             self.logger.debug('PagerDuty DRY RUN enabled, not sending %s notifications!', len(self.events))
-            responses.extend(self.events)
-            self.events.clear()
-            return responses
 
-        self.logger.debug('PagerDuty event count: %s', len(self.events))
+            while self.events:
+                event = self.events.popleft()
+                event_key = event.get('dedup_key')
+                event_action = event.get('event_action', '')
+                event_id = 'debug::{action}::{name}'.format(name=event_key, action=event_action)
 
-        while self.events:
-            event = self.events.popleft()
+                self.logger.debug('Sending PagerDuty %s event...', event_id)
+                self.responses.append((event_id, event))
+        else:
+            self.logger.debug('PagerDuty event count: %s', len(self.events))
 
-            self.logger.debug('Sending PagerDuty %s event...', event.get('payload', {}).get('class', ''))
+            while self.events:
+                event = self.events.popleft()
+                event_key = event.get('dedup_key')
+                event_action = event.get('event_action', '')
+                event_id = '{action}::{name}'.format(name=event_key, action=event_action)
 
-            response = self.post_json(payload=event)
-            responses.append(response)
+                self.logger.debug('Sending PagerDuty %s event...', event_id)
 
-        return (send_status, responses)
+                response = self.post_json(payload=event)
+                self.responses.append((event_id, response))
+
+        return (send_status, self.responses)
 
     def enqueue_ses_account_sending_quota_trigger_event(self, *args, **kwargs):
         event = self.build_ses_account_sending_quota_trigger_event_payload(*args, **kwargs)

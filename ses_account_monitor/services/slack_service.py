@@ -46,6 +46,7 @@ class SlackService(HttpClient):
 
         self.messages = deque([])
         self.channels = (channels or self._config.channels)
+        self.responses = []
 
     @property
     def config(self):
@@ -57,8 +58,9 @@ class SlackService(HttpClient):
 
     def send_notifications(self, dry_run=None):
         self.logger.debug('Sending notifications to Slack channels...')
+        self.logger.debug('Slack channel count: %s', len(self.channels))
 
-        responses = []
+        self.responses = []
         send_status = (not dry_run)
 
         if dry_run or self.dry_run:
@@ -68,14 +70,12 @@ class SlackService(HttpClient):
                 message = self.messages.popleft()
 
                 channel_messages = self._build_message_with_channels(message)
-                responses.extend(channel_messages)
+                self.responses.extend(channel_messages)
 
-            return responses
+            return self.responses
 
         while self.messages:
             message = self.messages.popleft()
-
-            self.logger.debug('Slack channel count: %s', len(self.channels))
 
             for channel in self.channels:
                 self.logger.debug('Sending Slack notification to %s...', channel)
@@ -84,9 +84,9 @@ class SlackService(HttpClient):
                 payload.update(message)
 
                 response = self.post_json(payload=message)
-                responses.append(response)
+                self.responses.append((channel, response))
 
-        return (send_status, responses)
+        return (send_status, self.responses)
 
     def enqueue_ses_account_sending_quota_message(self, *args, **kwargs):
         message = self.build_ses_account_sending_quota_payload(*args, **kwargs)
