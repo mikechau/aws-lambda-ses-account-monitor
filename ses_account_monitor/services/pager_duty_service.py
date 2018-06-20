@@ -123,7 +123,7 @@ class PagerDutyService(HttpClient):
     def build_ses_account_reputation_trigger_event_payload(self,
                                                            metrics,
                                                            event_iso_ts=None,
-                                                           metric_ts=None,
+                                                           event_unix_ts=None,
                                                            action=None):
         return self._build_trigger_payload(summary='SES account reputation is at dangerous levels.',
                                            severity='critical',
@@ -132,7 +132,7 @@ class PagerDutyService(HttpClient):
                                            timestamp=event_iso_ts,
                                            custom_details=self._build_ses_reputation_custom_details(metrics=metrics,
                                                                                                     action=action,
-                                                                                                    ts=metric_ts),
+                                                                                                    ts=event_unix_ts),
                                            client='AWS Console',
                                            client_url=self.config.ses_console_url)
 
