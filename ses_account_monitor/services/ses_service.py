@@ -8,7 +8,7 @@ import boto3
 from ses_account_monitor.config import LAMBDA_AWS_SESSION_CONFIG
 
 from ses_account_monitor.util import (
-    current_iso8601_timestamp,
+    iso8601_timestamp,
     json_dump_request_event,
     json_dump_response_event)
 
@@ -31,8 +31,8 @@ class SesService(object):
     def logger(self):
         return self._logger
 
-    def get_account_sending_stats(self, ts=None):
-        ts = (ts or current_iso8601_timestamp())
+    def get_account_sending_stats(self, event_iso_ts=None):
+        ts = (event_iso_ts or iso8601_timestamp())
         stats = self.get_account_sending_quota()
         volume = stats['SentLast24Hours']
         max_volume = stats['Max24HourSend']

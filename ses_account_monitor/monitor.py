@@ -22,6 +22,8 @@ from ses_account_monitor.config import (
     THRESHOLD_WARNING)
 
 from ses_account_monitor.util import (
+    unix_timestamp,
+    iso8601_timestamp,
     json_dump_request_event,
     json_dump_response_event)
 
@@ -75,14 +77,21 @@ class Monitor(object):
         self.slack_service.send_notifications()
         self.logger.debug('Finished sending all notifications!')
 
-    def handle_ses_sending_quota(self, current_time=None):
+    def handle_ses_sending_quota(self, target_datetime=None):
         self.logger.debug('Handling SES account sending quota...')
 
         if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
             self.logger.debug('SES management strategy %s is not VALID, skipping!', self.ses_management_strategy)
             return
 
-        volume, max_volume, utilization_percent, metric_ts = self.ses_service.get_account_sending_stats(current_time)
+        if target_datetime is None:
+            event_iso_ts = iso8601_timestamp()
+            event_unix_ts = unix_timestamp()
+        else:
+            event_iso_ts = target_datetime.isoformat()
+            event_unix_ts = unix_timestamp(target_datetime)
+
+        volume, max_volume, utilization_percent, metric_iso_ts = self.ses_service.get_account_sending_stats(event_iso_ts=event_iso_ts)
 
         critical_percent = self.ses_sending_quota_critical_percent
         warning_percent = self.ses_sending_quota_warning_percent
@@ -92,37 +101,42 @@ class Monitor(object):
                                                     critical_percent=critical_percent,
                                                     volume=volume,
                                                     max_volume=max_volume,
-                                                    metric_ts=metric_ts)
+                                                    metric_iso_ts=metric_iso_ts,
+                                                    event_iso_ts=event_iso_ts,
+                                                    event_unix_ts=event_unix_ts)
         elif utilization_percent >= warning_percent:
             self._handle_ses_sending_quota_warning(utilization_percent=utilization_percent,
                                                    warning_percent=warning_percent,
                                                    volume=volume,
                                                    max_volume=max_volume,
-                                                   metric_ts=metric_ts)
+                                                   metric_iso_ts=metric_iso_ts,
+                                                   event_unix_ts=event_unix_ts)
         else:
             self._handle_ses_sending_quota_ok(utilization_percent=utilization_percent,
                                               warning_percent=warning_percent)
 
-    def handle_ses_reputation(self, current_time=None, period=None, period_timedelta=None):
+        return self._get_pending_notifications()
+
+    def handle_ses_reputation(self, event_iso_ts=None, period=None, period_timedelta=None):
         self.logger.debug('Handling SES account reputation...')
 
         if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
             self.logger.debug('SES management strategy %s is not VALID, skipping!', self.ses_management_strategy)
             return
 
-        metrics = self.cloudwatch_service.get_ses_account_reputation_metrics(current_time=current_time,
+        metrics = self.cloudwatch_service.get_ses_account_reputation_metrics(event_iso_ts=event_iso_ts,
                                                                              period=period,
                                                                              period_timedelta=period_timedelta)
 
         if metrics.critical:
             self._handle_ses_reputation_critical(metrics=metrics,
-                                                 current_time=current_time)
+                                                 event_iso_ts=event_iso_ts)
         elif metrics.warning:
             self._handle_ses_reputation_warning(metrics=metrics,
-                                                current_time=current_time)
+                                                event_iso_ts=event_iso_ts)
         elif metrics.ok:
             self._handle_ses_reputation_ok(metrics=metrics,
-                                           current_time=current_time)
+                                           event_iso_ts=event_iso_ts)
 
     def _set_logger(self, logger):
         if logger:
@@ -131,7 +145,13 @@ class Monitor(object):
             self._logger = logging.getLogger(self.__module__)
             self._logger.addHandler(logging.NullHandler())
 
-    def _handle_ses_sending_quota_critical(self, utilization_percent, critical_percent, volume, max_volume, metric_ts):
+    def _get_pending_notifications(self):
+        return {
+            'slack': self.slack_service.messages,
+            'pagerduty': self.pager_duty_service.events
+        }
+
+    def _handle_ses_sending_quota_critical(self, utilization_percent, critical_percent, volume, max_volume, metric_iso_ts, event_iso_ts=None, event_unix_ts=None):
         self.logger.debug('SES sending quota is in a CRITICAL state!')
         self._log_handle_ses_quota_request(utilization_percent, critical_percent, 'CRITICAL')
 
@@ -141,7 +161,8 @@ class Monitor(object):
                                                                                     max_volume=max_volume,
                                                                                     utilization_percent=utilization_percent,
                                                                                     threshold_percent=critical_percent,
-                                                                                    metric_ts=metric_ts)
+                                                                                    metric_ts=metric_iso_ts,
+                                                                                    event_iso_ts=event_iso_ts)
         else:
             self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
 
@@ -153,13 +174,14 @@ class Monitor(object):
                                                                          threshold_percent=critical_percent,
                                                                          volume=volume,
                                                                          max_volume=max_volume,
-                                                                         metric_ts=metric_ts)
+                                                                         metric_iso_ts=metric_iso_ts,
+                                                                         event_unix_ts=event_unix_ts)
         else:
             self.logger.debug('Slack notifications is DISABLED, skipping...')
 
         self._log_handle_ses_quota_response()
 
-    def _handle_ses_sending_quota_warning(self, utilization_percent, warning_percent, volume, max_volume, metric_ts):
+    def _handle_ses_sending_quota_warning(self, utilization_percent, warning_percent, volume, max_volume, metric_iso_ts, event_unix_ts=None):
         self.logger.debug('SES sending quota is in a WARNING state!')
 
         self._log_handle_ses_quota_request(utilization_percent, warning_percent, 'WARNING')
@@ -178,7 +200,8 @@ class Monitor(object):
                                                                          threshold_percent=warning_percent,
                                                                          volume=volume,
                                                                          max_volume=max_volume,
-                                                                         metric_ts=metric_ts)
+                                                                         metric_iso_ts=metric_iso_ts,
+                                                                         event_unix_ts=event_unix_ts)
         else:
             self.logger.debug('Slack notifications is DISABLED, skipping...')
 
@@ -197,7 +220,7 @@ class Monitor(object):
 
         self._log_handle_ses_quota_response()
 
-    def _handle_ses_reputation_critical(self, metrics, current_time=None):
+    def _handle_ses_reputation_critical(self, metrics, event_iso_ts=None):
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_CRITICAL)
 
         self._log_handle_ses_reputation_request(metrics=metrics,
@@ -216,8 +239,7 @@ class Monitor(object):
         if self.notify_config.notify_pager_duty_on_ses_reputation:
             self.logger.debug('Pager Duty alerting is ENABLED, queuing TRIGGER event...')
             self.pager_duty_service.enqueue_ses_account_reputation_trigger_event(metrics=danger_metrics,
-                                                                                 event_ts=current_time,
-                                                                                 metric_ts=current_time,
+                                                                                 event_iso_ts=event_iso_ts,
                                                                                  action=action)
         else:
             self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
@@ -227,14 +249,14 @@ class Monitor(object):
 
             self.slack_service.enqueue_ses_account_reputation_message(threshold_name=THRESHOLD_CRITICAL,
                                                                       metrics=danger_metrics,
-                                                                      metric_ts=current_time,
+                                                                      event_iso_ts=event_iso_ts,
                                                                       action=action)
         else:
             self.logger.debug('Slack notifications is DISABLED, skipping...')
 
         self._log_handle_ses_reputation_response()
 
-    def _handle_ses_reputation_warning(self, metrics, current_time=None):
+    def _handle_ses_reputation_warning(self, metrics, event_iso_ts=None):
         action = ACTION_ALERT
 
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_WARNING)
@@ -258,14 +280,14 @@ class Monitor(object):
 
             self.slack_service.enqueue_ses_account_reputation_message(threshold_name=THRESHOLD_WARNING,
                                                                       metrics=metrics.warning,
-                                                                      metric_ts=current_time,
+                                                                      event_iso_ts=event_iso_ts,
                                                                       action=action)
         else:
             self.logger.debug('Slack notifications is DISABLED, skipping...')
 
         self._log_handle_ses_reputation_response()
 
-    def _handle_ses_reputation_ok(self, metrics, current_time=None):
+    def _handle_ses_reputation_ok(self, metrics, event_iso_ts=None):
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_OK)
 
         self._log_handle_ses_reputation_request(metrics=metrics,
@@ -283,7 +305,7 @@ class Monitor(object):
 
                     self.slack_service.enqueue_ses_account_reputation_message(threshold_name=THRESHOLD_WARNING,
                                                                               metrics=metrics.warning,
-                                                                              metric_ts=current_time,
+                                                                              event_iso_ts=event_iso_ts,
                                                                               action=ACTION_ENABLE)
                 else:
                     self.logger.debug('Slack notifications is DISABLED, skipping...')
