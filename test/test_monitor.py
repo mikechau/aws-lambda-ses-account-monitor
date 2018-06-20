@@ -59,8 +59,68 @@ def target_datetime():
 
 
 @pytest.fixture
-def iso8601_date(target_datetime):
+def iso8601_datetime(target_datetime):
     return target_datetime.isoformat()
+
+
+@pytest.fixture()
+def start_datetime():
+    return datetime(2018, 6, 17, 1, 41, 25, 787402)
+
+
+@pytest.fixture()
+def end_datetime():
+    return datetime(2018, 6, 17, 2, 11, 25, 787402)
+
+
+@pytest.fixture()
+def metric_data_results_response(end_datetime):
+    return {
+        'MetricDataResults': [
+            {
+                'Id': 'bounce_rate',
+                'Label': 'Bounce Rate',
+                'Timestamps': [
+                    end_datetime,
+                ],
+                'Values': [
+                    0.03
+                ],
+                'StatusCode': 'Complete',
+            },
+            {
+                'Id': 'complaint_rate',
+                'Label': 'Complaint Rate',
+                'Timestamps': [
+                    end_datetime
+                ],
+                'Values': [
+                    0.0001
+                ]
+            }
+        ],
+        'NextToken': 'string'
+    }
+
+
+@pytest.fixture()
+def metric_data_results_params(start_datetime, end_datetime):
+    return {'EndTime': end_datetime,
+            'MetricDataQueries': [{'Id': 'bounce_rate',
+                                   'Label': 'Bounce Rate',
+                                   'MetricStat': {'Metric': {'MetricName': 'Reputation.BounceRate',
+                                                             'Namespace': 'AWS/SES'},
+                                                  'Period': 900,
+                                                  'Stat': 'Average'},
+                                   'ReturnData': True},
+                                  {'Id': 'complaint_rate',
+                                   'Label': 'Complaint Rate',
+                                   'MetricStat': {'Metric': {'MetricName': 'Reputation.ComplaintRate',
+                                                             'Namespace': 'AWS/SES'},
+                                                  'Period': 900,
+                                                  'Stat': 'Average'},
+                                   'ReturnData': True}],
+            'StartTime': start_datetime}
 
 
 def test_handle_ses_sending_quota_critical(monitor, target_datetime):
@@ -76,10 +136,10 @@ def test_handle_ses_sending_quota_critical(monitor, target_datetime):
 
     ses_stubber.activate()
 
-    response = monitor.handle_ses_sending_quota(target_datetime=target_datetime)
+    result = monitor.handle_ses_sending_quota(target_datetime=target_datetime)
 
-    assert len(response['pagerduty']) == 1
-    assert response['pagerduty'][0] == {
+    assert len(result['pagerduty']) == 1
+    assert result['pagerduty'][0] == {
         'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
         'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
         'routing_key': None,
@@ -118,15 +178,15 @@ def test_handle_ses_sending_quota_warning(monitor, target_datetime):
 
     ses_stubber.activate()
 
-    response = monitor.handle_ses_sending_quota(target_datetime=target_datetime)
+    result = monitor.handle_ses_sending_quota(target_datetime=target_datetime)
 
-    assert len(response['pagerduty']) == 1
-    assert response['pagerduty'][0] == {
+    assert len(result['pagerduty']) == 1
+    assert result['pagerduty'][0] == {
         'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
         'event_action': 'resolve',
         'routing_key': None}
-    assert len(response['slack']) == 1
-    assert response['slack'][0] == {
+    assert len(result['slack']) == 1
+    assert result['slack'][0] == {
         'attachments': [
             {'color': 'warning',
              'fallback': 'SES account sending rate has breached WARNING threshold.',
@@ -182,9 +242,9 @@ def test_handle_ses_sending_quota_ok(monitor, target_datetime):
 
     ses_stubber.activate()
 
-    response = monitor.handle_ses_sending_quota(target_datetime=target_datetime)
+    result = monitor.handle_ses_sending_quota(target_datetime=target_datetime)
 
-    assert response == {
+    assert result == {
         'slack': deque([]),
         'pagerduty': deque([{
             'event_action': 'resolve',
@@ -192,3 +252,16 @@ def test_handle_ses_sending_quota_ok(monitor, target_datetime):
             'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota'
         }])
     }
+
+
+def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_results_response, metric_data_results_params):
+    cloudwatch_stubber = Stubber(monitor.cloudwatch_service.client)
+    cloudwatch_stubber.add_response('get_metric_data',
+                                    metric_data_results_response,
+                                    metric_data_results_params)
+
+    cloudwatch_stubber.activate()
+
+    result = monitor.handle_ses_reputation(target_datetime=end_datetime)
+
+    assert result is None

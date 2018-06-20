@@ -52,18 +52,18 @@ class CloudWatchService(object):
     def logger(self):
         return self._logger
 
-    def get_ses_account_reputation_metrics(self, current_time=None, period=None, period_timedelta=None):
-        metric_data = self.get_ses_account_reputation_metric_data(current_time=current_time,
+    def get_ses_account_reputation_metrics(self, target_datetime=None, period=None, period_timedelta=None):
+        metric_data = self.get_ses_account_reputation_metric_data(target_datetime=target_datetime,
                                                                   period=period,
                                                                   period_timedelta=period_timedelta)
 
         return self.build_ses_account_reputation_metrics(metric_data)
 
-    def get_ses_account_reputation_metric_data(self, current_time=None, period=None, period_timedelta=None):
+    def get_ses_account_reputation_metric_data(self, target_datetime=None, period=None, period_timedelta=None):
         self.logger.debug('Fetching SES account reputation metrics...')
 
         params = self.get_ses_account_reputation_metric_params(
-            current_time=current_time,
+            target_datetime=target_datetime,
             period=period,
             period_timedelta=period_timedelta)
 
@@ -75,15 +75,15 @@ class CloudWatchService(object):
 
         return response['MetricDataResults']
 
-    def get_ses_account_reputation_metric_params(self, current_time=None, period=None, period_timedelta=None):
+    def get_ses_account_reputation_metric_params(self, target_datetime=None, period=None, period_timedelta=None):
         if period is None:
             period = self.ses_reputation_period
 
         if period_timedelta is None:
             period_timedelta = self.ses_reputation_period_timedelta
 
-        if current_time is None:
-            current_time = datetime.utcnow()
+        if target_datetime is None:
+            target_datetime = datetime.utcnow()
 
         return {
             'MetricDataQueries': [
@@ -114,8 +114,8 @@ class CloudWatchService(object):
                     'ReturnData': True
                 }
             ],
-            'StartTime': current_time - timedelta(seconds=period_timedelta),
-            'EndTime': current_time
+            'StartTime': target_datetime - timedelta(seconds=period_timedelta),
+            'EndTime': target_datetime
         }
 
     def build_ses_account_reputation_metrics(self, metric_data):
