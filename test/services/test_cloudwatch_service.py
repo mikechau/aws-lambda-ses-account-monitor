@@ -58,7 +58,7 @@ def metric_data_results_response(end_datetime):
                     end_datetime
                 ],
                 'Values': [
-                    0.0001
+                    0.00001
                 ]
             }
         ],
@@ -98,7 +98,7 @@ def metric_data_results(current_datetime):
             {'Id': 'complaint_rate',
              'Label': 'Complaint Rate',
              'Timestamps': [current_datetime],
-             'Values': [0.0001]}]
+             'Values': [0.00001]}]
 
 
 @pytest.fixture()
@@ -135,9 +135,9 @@ def test_get_ses_account_reputation_metric_data_results(client,
 
 def test_build_ses_account_reputation_metrics(service, build_metric_data_results):
     metric_data_results = build_metric_data_results(0.05, 0.1)
-
     result = service.build_ses_account_reputation_metrics(metric_data_results)
-    assert result.critical == [('Complaint Rate', 10.0, 0.4, '2018-06-17T02:11:25.787402')]
+
+    assert result.critical == [('Complaint Rate', 10.0, 0.04, '2018-06-17T02:11:25.787402')]
     assert result.ok == []
     assert result.warning == [('Bounce Rate', 5.0, 5.0, '2018-06-17T02:11:25.787402')]
 
@@ -157,5 +157,5 @@ def test_get_ses_account_reputation_metrics(client,
         result = service.get_ses_account_reputation_metrics(target_datetime=end_datetime)
         assert result.critical == []
         assert result.ok == [('Bounce Rate', 3.0, 5.0, '2018-06-17T02:11:25.787402'),
-                             ('Complaint Rate', 0.01, 0.1, '2018-06-17T02:11:25.787402')]
+                             ('Complaint Rate', 0.001, 0.01, '2018-06-17T02:11:25.787402')]
         assert result.warning == []
