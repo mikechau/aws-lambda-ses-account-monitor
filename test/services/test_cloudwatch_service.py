@@ -8,7 +8,7 @@ from botocore.stub import Stubber
 from ses_account_monitor.services.cloudwatch_service import CloudWatchService
 
 
-@pytest.fixture()
+@pytest.fixture
 def client():
     return boto3.client('cloudwatch',
                         aws_access_key_id='a',
@@ -16,27 +16,27 @@ def client():
                         region_name='us-west-2')
 
 
-@pytest.fixture()
+@pytest.fixture
 def service(client):
     return CloudWatchService(client=client)
 
 
-@pytest.fixture()
+@pytest.fixture
 def start_datetime():
     return datetime(2018, 6, 17, 1, 41, 25, 787402)
 
 
-@pytest.fixture()
+@pytest.fixture
 def end_datetime():
     return datetime(2018, 6, 17, 2, 11, 25, 787402)
 
 
-@pytest.fixture()
+@pytest.fixture
 def current_datetime(end_datetime):
     return end_datetime
 
 
-@pytest.fixture()
+@pytest.fixture
 def metric_data_results_response(end_datetime):
     return {
         'MetricDataResults': [
@@ -66,7 +66,7 @@ def metric_data_results_response(end_datetime):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def metric_data_results_params(start_datetime, end_datetime):
     return {
         'StartTime': start_datetime,
@@ -88,7 +88,7 @@ def metric_data_results_params(start_datetime, end_datetime):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def metric_data_results(current_datetime):
     return [{'Id': 'bounce_rate',
              'Label': 'Bounce Rate',
@@ -101,7 +101,7 @@ def metric_data_results(current_datetime):
              'Values': [0.00001]}]
 
 
-@pytest.fixture()
+@pytest.fixture
 def build_metric_data_results(current_datetime):
     def _build_metric_data_results(bounce_rate_value, complaint_rate_value):
         return [{'Id': 'bounce_rate',

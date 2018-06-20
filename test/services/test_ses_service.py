@@ -8,7 +8,7 @@ from botocore.stub import Stubber
 from ses_account_monitor.services.ses_service import SesService
 
 
-@pytest.fixture()
+@pytest.fixture
 def client():
     return boto3.client('ses',
                         aws_access_key_id='a',
@@ -16,12 +16,12 @@ def client():
                         region_name='us-west-2')
 
 
-@pytest.fixture()
+@pytest.fixture
 def service(client):
     return SesService(client=client)
 
 
-@pytest.fixture()
+@pytest.fixture
 def ses_quota_responses():
     return (({
         'Max24HourSend': 123.0,
@@ -42,7 +42,7 @@ def ses_quota_responses():
     }, None, True))
 
 
-@pytest.fixture()
+@pytest.fixture
 def iso8601_date():
     return datetime(2018, 1, 1, 0, 0, 0, 0).isoformat()
 

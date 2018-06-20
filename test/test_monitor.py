@@ -63,47 +63,17 @@ def iso8601_datetime(target_datetime):
     return target_datetime.isoformat()
 
 
-@pytest.fixture()
+@pytest.fixture
 def start_datetime():
     return datetime(2018, 6, 17, 1, 41, 25, 787402)
 
 
-@pytest.fixture()
+@pytest.fixture
 def end_datetime():
     return datetime(2018, 6, 17, 2, 11, 25, 787402)
 
 
-@pytest.fixture()
-def metric_data_results_response_ok(end_datetime):
-    return {
-        'MetricDataResults': [
-            {
-                'Id': 'bounce_rate',
-                'Label': 'Bounce Rate',
-                'Timestamps': [
-                    end_datetime,
-                ],
-                'Values': [
-                    0.03
-                ],
-                'StatusCode': 'Complete',
-            },
-            {
-                'Id': 'complaint_rate',
-                'Label': 'Complaint Rate',
-                'Timestamps': [
-                    end_datetime
-                ],
-                'Values': [
-                    0.00001
-                ]
-            }
-        ],
-        'NextToken': 'string'
-    }
-
-
-@pytest.fixture()
+@pytest.fixture
 def metric_data_results_response_critical(end_datetime):
     return {
         'MetricDataResults': [
@@ -133,7 +103,67 @@ def metric_data_results_response_critical(end_datetime):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
+def metric_data_results_response_warning(end_datetime):
+    return {
+        'MetricDataResults': [
+            {
+                'Id': 'bounce_rate',
+                'Label': 'Bounce Rate',
+                'Timestamps': [
+                    end_datetime,
+                ],
+                'Values': [
+                    0.054
+                ],
+                'StatusCode': 'Complete',
+            },
+            {
+                'Id': 'complaint_rate',
+                'Label': 'Complaint Rate',
+                'Timestamps': [
+                    end_datetime
+                ],
+                'Values': [
+                    0.000000001
+                ]
+            }
+        ],
+        'NextToken': 'string'
+    }
+
+
+@pytest.fixture
+def metric_data_results_response_ok(end_datetime):
+    return {
+        'MetricDataResults': [
+            {
+                'Id': 'bounce_rate',
+                'Label': 'Bounce Rate',
+                'Timestamps': [
+                    end_datetime,
+                ],
+                'Values': [
+                    0.03
+                ],
+                'StatusCode': 'Complete',
+            },
+            {
+                'Id': 'complaint_rate',
+                'Label': 'Complaint Rate',
+                'Timestamps': [
+                    end_datetime
+                ],
+                'Values': [
+                    0.00001
+                ]
+            }
+        ],
+        'NextToken': 'string'
+    }
+
+
+@pytest.fixture
 def metric_data_results_params(start_datetime, end_datetime):
     return {'EndTime': end_datetime,
             'MetricDataQueries': [{'Id': 'bounce_rate',
@@ -359,6 +389,57 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
                         {'short': False,
                          'title': 'Message',
                          'value': 'SES account reputation has breached the CRITICAL threshold.'}],
+             'footer': 'undefined-undefined-undefined-ses-account-monitor',
+             'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
+             'ts': 1529226685}],
+        'icon_emoji': None,
+        'username': 'SES Account Monitor'}
+
+
+def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_results_response_warning, metric_data_results_params):
+    cloudwatch_stubber = Stubber(monitor.cloudwatch_service.client)
+    cloudwatch_stubber.add_response('get_metric_data',
+                                    metric_data_results_response_warning,
+                                    metric_data_results_params)
+
+    cloudwatch_stubber.activate()
+
+    result = monitor.handle_ses_reputation(target_datetime=end_datetime)
+
+    assert result['pager_duty'] == deque([])
+    assert len(result['slack']) == 1
+    assert result['slack'][0] == {
+        'attachments': [
+            {'color': 'warning',
+             'fallback': 'SES account reputation has breached WARNING threshold.',
+             'fields': [
+                 {'short': True,
+                  'title': 'Service',
+                  'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Reputation>'},
+                 {'short': True,
+                  'title': 'Account',
+                  'value': 'undefined'},
+                 {'short': True,
+                  'title': 'Region',
+                  'value': 'undefined'},
+                 {'short': True,
+                  'title': 'Environment',
+                  'value': 'undefined'},
+                 {'short': True,
+                  'title': 'Status',
+                  'value': 'WARNING'},
+                 {'short': True,
+                  'title': 'Action',
+                  'value': 'ALERT'},
+                 {'short': True,
+                  'title': 'Bounce Rate / Threshold',
+                  'value': '5.40% / 5.00%'},
+                 {'short': True,
+                  'title': 'Bounce Rate Time',
+                  'value': '2018-06-17T02:11:25.787402'},
+                 {'short': False,
+                  'title': 'Message',
+                  'value': 'SES account reputation has breached the WARNING threshold.'}],
              'footer': 'undefined-undefined-undefined-ses-account-monitor',
              'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
              'ts': 1529226685}],
