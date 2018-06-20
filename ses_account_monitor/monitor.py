@@ -136,7 +136,6 @@ class Monitor(object):
                                                  event_unix_ts=event_unix_ts)
         elif metrics.warning:
             self._handle_ses_reputation_warning(metrics=metrics,
-                                                event_iso_ts=event_iso_ts,
                                                 event_unix_ts=event_unix_ts)
         elif metrics.ok:
             self._handle_ses_reputation_ok(metrics=metrics,

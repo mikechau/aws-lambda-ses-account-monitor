@@ -209,8 +209,8 @@ class PagerDutyService(HttpClient):
 
         for label, current_percent, threshold_percent, ts in metrics:
             name = label.replace(' ', '_').lower()
-            details[name] = '{:.2%}'.format(current_percent)
-            details[name + '_threshold'] = '{:.2%}'.format(threshold_percent)
+            details[name] = '{:.2%}'.format(current_percent / 100)
+            details[name + '_threshold'] = '{:.2%}'.format(threshold_percent / 100)
             details[name + '_timestamp'] = str(ts)
 
         return details

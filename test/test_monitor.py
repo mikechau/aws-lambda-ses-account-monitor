@@ -95,7 +95,7 @@ def metric_data_results_response_ok(end_datetime):
                     end_datetime
                 ],
                 'Values': [
-                    0.0001
+                    0.00001
                 ]
             }
         ],
@@ -104,7 +104,7 @@ def metric_data_results_response_ok(end_datetime):
 
 
 @pytest.fixture()
-def metric_data_results_response_warning(end_datetime):
+def metric_data_results_response_critical(end_datetime):
     return {
         'MetricDataResults': [
             {
@@ -114,7 +114,7 @@ def metric_data_results_response_warning(end_datetime):
                     end_datetime,
                 ],
                 'Values': [
-                    0.03
+                    0.05
                 ],
                 'StatusCode': 'Complete',
             },
@@ -125,7 +125,7 @@ def metric_data_results_response_warning(end_datetime):
                     end_datetime
                 ],
                 'Values': [
-                    0.0088
+                    0.99
                 ]
             }
         ],
@@ -284,10 +284,10 @@ def test_handle_ses_sending_quota_ok(monitor, target_datetime):
     }
 
 
-def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_results_response_warning, metric_data_results_params):
+def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_results_response_critical, metric_data_results_params):
     cloudwatch_stubber = Stubber(monitor.cloudwatch_service.client)
     cloudwatch_stubber.add_response('get_metric_data',
-                                    metric_data_results_response_warning,
+                                    metric_data_results_response_critical,
                                     metric_data_results_params)
 
     cloudwatch_stubber.activate()
@@ -306,8 +306,11 @@ def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_result
                                                                       'aws_account_name': 'undefined',
                                                                       'aws_environment': 'undefined',
                                                                       'aws_region': 'undefined',
-                                                                      'complaint_rate': '88.00%',
-                                                                      'complaint_rate_threshold': '40.00%',
+                                                                      'bounce_rate': '5.00%',
+                                                                      'bounce_rate_threshold': '5.00%',
+                                                                      'bounce_rate_timestamp': '2018-06-17T02:11:25.787402',
+                                                                      'complaint_rate': '99.00%',
+                                                                      'complaint_rate_threshold': '0.04%',
                                                                       'complaint_rate_timestamp': '2018-06-17T02:11:25.787402',
                                                                       'ts': '1529226685',
                                                                       'version': 'v1.2018.06.18'},
@@ -343,9 +346,15 @@ def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_result
                          'value': 'ALERT'},
                         {'short': True,
                          'title': 'Complaint Rate / Threshold',
-                         'value': '0.88% / 0.40%'},
+                         'value': '99.00% / 0.04%'},
                         {'short': True,
                          'title': 'Complaint Rate Time',
+                         'value': '2018-06-17T02:11:25.787402'},
+                        {'short': True,
+                         'title': 'Bounce Rate / Threshold',
+                         'value': '5.00% / 5.00%'},
+                        {'short': True,
+                         'title': 'Bounce Rate Time',
                          'value': '2018-06-17T02:11:25.787402'},
                         {'short': False,
                          'title': 'Message',
