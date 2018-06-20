@@ -22,8 +22,9 @@ from ses_account_monitor.config import (
     THRESHOLD_WARNING)
 
 from ses_account_monitor.util import (
-    unix_timestamp,
+    current_datetime,
     iso8601_timestamp,
+    unix_timestamp,
     json_dump_request_event,
     json_dump_response_event)
 
@@ -84,12 +85,9 @@ class Monitor(object):
             self.logger.debug('SES management strategy %s is not VALID, skipping!', self.ses_management_strategy)
             return
 
-        if target_datetime is None:
-            event_iso_ts = iso8601_timestamp()
-            event_unix_ts = unix_timestamp()
-        else:
-            event_iso_ts = target_datetime.isoformat()
-            event_unix_ts = unix_timestamp(target_datetime)
+        target_datetime = (target_datetime or current_datetime())
+        event_iso_ts = iso8601_timestamp(target_datetime)
+        event_unix_ts = unix_timestamp(target_datetime)
 
         volume, max_volume, utilization_percent, metric_iso_ts = self.ses_service.get_account_sending_stats(event_iso_ts=event_iso_ts)
 
@@ -117,14 +115,17 @@ class Monitor(object):
 
         return self._get_pending_notifications()
 
-    def handle_ses_reputation(self, event_iso_ts=None, period=None, period_timedelta=None):
+    def handle_ses_reputation(self, target_datetime=None, period=None, period_timedelta=None):
         self.logger.debug('Handling SES account reputation...')
 
         if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
             self.logger.debug('SES management strategy %s is not VALID, skipping!', self.ses_management_strategy)
             return
 
-        metrics = self.cloudwatch_service.get_ses_account_reputation_metrics(event_iso_ts=event_iso_ts,
+        target_datetime = (target_datetime or current_datetime())
+        event_iso_ts = iso8601_timestamp(target_datetime)
+
+        metrics = self.cloudwatch_service.get_ses_account_reputation_metrics(target_datetime=target_datetime,
                                                                              period=period,
                                                                              period_timedelta=period_timedelta)
 
@@ -338,8 +339,8 @@ class Monitor(object):
                                      method_name='handle_ses_quota'))
 
     def _log_handle_ses_reputation_request(self, metrics, status):
-        critical_count = len(metrics.critical_count)
-        warning_count = len(metrics.warning_count)
+        critical_count = len(metrics.critical)
+        warning_count = len(metrics.warning)
         ok_count = len(metrics.ok)
 
         self.logger.debug('SES account reputation metrics - critical: %s, warning: %s, ok: %s, status is %s!',

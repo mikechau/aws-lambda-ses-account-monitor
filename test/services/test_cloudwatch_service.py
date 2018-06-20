@@ -129,7 +129,7 @@ def test_get_ses_account_reputation_metric_data_results(client,
                          metric_data_results_params)
 
     with stubber:
-        result = service.get_ses_account_reputation_metric_data(current_time=end_datetime)
+        result = service.get_ses_account_reputation_metric_data(target_datetime=end_datetime)
         assert result == metric_data_results
 
 
@@ -154,7 +154,7 @@ def test_get_ses_account_reputation_metrics(client,
                          metric_data_results_params)
 
     with stubber:
-        result = service.get_ses_account_reputation_metrics(current_time=end_datetime)
+        result = service.get_ses_account_reputation_metrics(target_datetime=end_datetime)
         assert result.critical == []
         assert result.ok == [('Bounce Rate', 3.0, 5.0, '2018-06-17T02:11:25.787402'),
                              ('Complaint Rate', 0.01, 0.1, '2018-06-17T02:11:25.787402')]
