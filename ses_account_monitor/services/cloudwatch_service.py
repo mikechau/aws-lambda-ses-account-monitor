@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+
+'''
+ses_account_monitor.configs.cloudwatch_service
+~~~~~~~~~~~~~~~~
+
+CloudWatch service module.
+'''
+
 import logging
 
 from collections import namedtuple
@@ -24,35 +32,79 @@ from ses_account_monitor.util import (
 SesReputationMetrics = namedtuple('SesReputationMetrics', ('critical',
                                                            'ok',
                                                            'warning'))
+'''
+class:SesReputationMetrics
+
+Args:
+    critical (:obj:`list` of :obj:`tuple`): List of critical metrics.
+    ok (:obj:`list` of :obj:`tuple`): List of ok metrics.
+    warning (:obj:`list` of :obj:`tuple`): List of warning metrics.
+'''
 
 
 class CloudWatchService(object):
+    '''
+    CloudWatch Service class, interfaces with CloudWatch.
+    '''
+
     def __init__(self,
                  client=None,
                  logger=None,
                  session_config=None,
                  ses_thresholds=None,
                  ses_reputation_period=None,
-                 ses_reputation_period_timedelta=None):
+                 ses_reputation_metric_timedelta=None):
+        '''
+        Args:
+            client (botocore.client.CloudWatch): The CloudWatch client.
+            logger (:obj:`logging.Logger`, optional): Logger instance. Defaults to None, which will create a logger instance.
+            session_config (:obj:`dict`, optional): The CloudWatch session, used to configure the client if the client is not provided.
+            ses_thresholds (:obj:`dict`, optional): SES thresholds configuration.
+            ses_reputation_period (:obj:`int`, optional): SES reputation period in seconds.
+            ses_reputation_metric_timedelta (:obj:`int`, optional): SES reputation metric timedelta in seconds.
+        '''
 
-        self._session_config = (session_config or LAMBDA_AWS_SESSION_CONFIG)
+        self._client = (client or self._build_client(session_config))
+        self._logger = (logger or self._build_logger())
 
         self.ses_thresholds = (ses_thresholds or SES_THRESHOLDS)
         self.ses_reputation_period = (ses_reputation_period or SES_REPUTATION_PERIOD)
         self.ses_reputation_metric_timedelta = (ses_reputation_metric_timedelta or SES_REPUTATION_METRIC_TIMEDELTA)
 
-        self._set_client(client)
-        self._set_logger(logger)
-
     @property
     def client(self):
+        '''
+        obj (botocore.client.CloudWatch): The CloudWatch client.
+        '''
+
         return self._client
 
     @property
     def logger(self):
+        '''
+        obj (logger.Logger): The logger instance.
+        '''
+
         return self._logger
 
     def get_ses_account_reputation_metrics(self, target_datetime=None, period=None, metric_timedelta=None):
+        '''
+        Get SES account reputation metrics, fetches it from AWS and then returns the latest metrics in a standardized format.
+
+        Args:
+            target_datetime (:obj:`datetime`, optional): The datetime of when to collect reputation metrics from.
+                Defaults to None, which will cause the current datetime to be used.
+            period (:obj:`int`, optional): The amount of seconds for the measurement periods in CloudWatch.
+                Defaults to None, which will use the value set in the config.
+            metric_timedelta (:obj:`int`, optional): The amount of seconds for how far back to retrieve metrics from
+                the target_datetime. Defaults to None, which will use the value set in the config.
+
+        Returns:
+            list (tuple): Returns a list of tuples, representing the reputation metrics.
+
+                [(label, value, threshold, iso8601_timestamp), ...]
+        '''
+
         if metric_timedelta is None:
             metric_timedelta = self.ses_reputation_metric_timedelta
 
@@ -63,9 +115,29 @@ class CloudWatchService(object):
         return self.build_ses_account_reputation_metrics(metric_data)
 
     def get_ses_account_reputation_metric_data(self, target_datetime=None, period=None, metric_timedelta=None):
+        '''
+        Fetch SES account reputation metric data from AWS.
+
+        Args:
+            target_datetime (:obj:`datetime`, optional): The datetime of when to collect reputation metrics from.
+                Defaults to None, which will cause the current datetime to be used.
+            period (:obj:`int`, optional): The amount of seconds for the measurement periods in CloudWatch.
+                Defaults to None, which will use the value set in the config.
+            metric_timedelta (:obj:`int`, optional): The amount of seconds for how far back to retrieve metrics from
+                the target_datetime. Defaults to None, which will use the value set in the config.
+
+        Returns:
+            list (dict):
+                Id (str): Metric id.
+                Label (str): Metric label.
+                StatusCode (str): Status code.
+                Timestamps (:obj:`list` of :obj:`datetime.datetime`): List of datetime objects.
+                Values (:obj:`list` of :obj:`float`): List of floats.
+        '''
+
         self.logger.debug('Fetching SES account reputation metrics...')
 
-        params = self.get_ses_account_reputation_metric_params(
+        params = self.build_ses_account_reputation_metric_params(
             target_datetime=target_datetime,
             period=period,
             metric_timedelta=metric_timedelta)
@@ -78,7 +150,25 @@ class CloudWatchService(object):
 
         return response['MetricDataResults']
 
-    def get_ses_account_reputation_metric_params(self, target_datetime=None, period=None, metric_timedelta=None):
+    def build_ses_account_reputation_metric_params(self, target_datetime=None, period=None, metric_timedelta=None):
+        '''
+        Generates params to request SES account reputation metrics.
+
+        Args:
+            target_datetime (:obj:`datetime`, optional): The datetime of when to collect reputation metrics from.
+                Defaults to None, which will cause the current datetime to be used.
+            period (:obj:`int`, optional): The amount of seconds for the measurement periods in CloudWatch.
+                Defaults to None, which will use the value set in the config.
+            metric_timedelta (:obj:`int`, optional): The amount of seconds for how far back to retrieve metrics from
+                the target_datetime. Defaults to None, which will use the value set in the config.
+
+        Returns:
+            dict:
+                MetricDataQueries (:obj:`list` of :obj:`dict`): List of dict objects, describing the metrics to collect.
+                StartTime (datetime): The starting datetime for the metrics collection.
+                EndTime (datetime): The ending datetime for the metrics collection.
+        '''
+
         if period is None:
             period = self.ses_reputation_period
 
@@ -122,6 +212,18 @@ class CloudWatchService(object):
         }
 
     def build_ses_account_reputation_metrics(self, metric_data):
+        '''
+        Formats the account reputation metrics from CloudWatch, returns the most current metrics.
+
+        Args:
+            metric_data (:obj:`list` of :obj:`dict`): MetricDataResults from CloudWatch GetMetricData API call.
+
+        Returns:
+            list (tuple): Returns a list of tuples, representing the reputation metrics.
+
+                [(label, value, threshold, iso8601_timestamp), ...]
+        '''
+
         thresholds = self.ses_thresholds
 
         results = SesReputationMetrics(critical=[],
@@ -146,6 +248,21 @@ class CloudWatchService(object):
         return results
 
     def _get_last_metric(self, metric):
+        '''
+        Get last metric from MetricDataResults.
+
+        Args:
+            metric (dict):
+                Id (str): Metric id.
+                Label (str): Metric label.
+                StatusCode (str): Status code.
+                Timestamps (:obj:`list` of :obj:`datetime`): List of datetime objects.
+                Values (:obj:`list` of :obj:`float`): List of floats.
+
+        Returns:
+            tuple: (label, value, iso8601_timestamp)
+        '''
+
         if not metric['Timestamps']:
             return None
 
@@ -155,21 +272,50 @@ class CloudWatchService(object):
 
         return (metric['Label'], last_value * 100.0, last_ts.isoformat())
 
-    def _set_client(self, client):
-        if client:
-            self._client = client
-        else:
-            session = boto3.Session(**self._session_config)
-            self._client = session.client('cloudwatch')
+    def _build_client(self, session_config=None):
+        '''
+        Build a CloudWatch client, if a session config is provided, it will use it to create the client.
 
-    def _set_logger(self, logger):
-        if logger:
-            self._logger = logger
+        Args:
+            session_config (dict):
+                aws_access_key_id (str): AWS access key ID.
+                aws_secret_access_key (str): AWS secret access key.
+                aws_session_token (str): AWS temporary session token.
+                region_name (str): Default region when creating new connections.
+                botocore_session (botocore.session.Session): Use this Botocore session instead of creating a new default one.
+                profile_name (str): The name of a profile to use. If not given, then the default profile is used.
+
+        Returns:
+            obj (botocore.client.CloudWatch): The CloudWatch client.
+        '''
+
+        if session_config:
+            session = boto3.Session(**self._session_config)
         else:
-            self._logger = logging.getLogger(self.__module__)
-            self._logger.addHandler(logging.NullHandler())
+            session = boto3.Session()
+
+        return session.client('cloudwatch')
+
+    def _build_logger(self):
+        '''
+        Builds a logger instance.
+
+        Returns:
+            obj (logging.Logger): The Logger instance.
+        '''
+
+        logger = logging.getLogger(self.__module__)
+        logger.addHandler(logging.NullHandler())
+        return logger
 
     def _log_get_ses_account_reputation_metrics_request(self, params):
+        '''
+        Log the params used to get SES account reputation metrics.
+
+        Args:
+            params (dict): MetricDataQueries dict object.
+        '''
+
         self.logger.debug('Requesting SES reputation metric data for account')
 
         self.logger.info(
@@ -178,6 +324,13 @@ class CloudWatchService(object):
                                     params=params))
 
     def _log_get_ses_account_reputation_metrics_response(self, response):
+        '''
+        Log the response from getting SES account reputation metrics.
+
+        Args:
+            response (dict): MetricDataResults dict object.
+        '''
+
         self.logger.debug('Received SES reputation metric data for account')
 
         self.logger.info(

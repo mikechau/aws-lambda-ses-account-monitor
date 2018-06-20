@@ -63,6 +63,9 @@ class HttpClient(object):
     def _build_logger(self):
         '''
         Builds a logger instance.
+
+        Returns:
+            obj (logging.Logger): The Logger instance.
         '''
 
         logger = logging.getLogger(self.__module__)
