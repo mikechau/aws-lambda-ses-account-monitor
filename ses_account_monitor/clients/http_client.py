@@ -18,7 +18,7 @@ from ses_account_monitor.util import (
 
 class HttpClient(object):
     '''
-    Base HTTP client class.
+    HttpClient class, used as a base class.
     '''
 
     def __init__(self, url, logger=None):
@@ -27,6 +27,7 @@ class HttpClient(object):
             url (str): Event triggering the function.
             logger (:obj:`logging.Logger`, optional): Logger instance. Defaults to None, which will create a logger instance.
         '''
+
         self._logger = (logger or self._build_logger())
         self.url = url
 
