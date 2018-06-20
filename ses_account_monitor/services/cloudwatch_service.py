@@ -12,7 +12,7 @@ import boto3
 from ses_account_monitor.config import (
     LAMBDA_AWS_SESSION_CONFIG,
     SES_REPUTATION_PERIOD,
-    SES_REPUTATION_PERIOD_TIMEDELTA,
+    SES_REPUTATION_METRIC_TIMEDELTA,
     SES_THRESHOLDS,
     THRESHOLD_CRITICAL,
     THRESHOLD_WARNING)
@@ -39,7 +39,7 @@ class CloudWatchService(object):
 
         self.ses_thresholds = (ses_thresholds or SES_THRESHOLDS)
         self.ses_reputation_period = (ses_reputation_period or SES_REPUTATION_PERIOD)
-        self.ses_reputation_period_timedelta = (ses_reputation_period_timedelta or SES_REPUTATION_PERIOD_TIMEDELTA)
+        self.ses_reputation_metric_timedelta = (ses_reputation_metric_timedelta or SES_REPUTATION_METRIC_TIMEDELTA)
 
         self._set_client(client)
         self._set_logger(logger)
@@ -52,20 +52,23 @@ class CloudWatchService(object):
     def logger(self):
         return self._logger
 
-    def get_ses_account_reputation_metrics(self, target_datetime=None, period=None, period_timedelta=None):
+    def get_ses_account_reputation_metrics(self, target_datetime=None, period=None, metric_timedelta=None):
+        if metric_timedelta is None:
+            metric_timedelta = self.ses_reputation_metric_timedelta
+
         metric_data = self.get_ses_account_reputation_metric_data(target_datetime=target_datetime,
                                                                   period=period,
-                                                                  period_timedelta=period_timedelta)
+                                                                  metric_timedelta=metric_timedelta)
 
         return self.build_ses_account_reputation_metrics(metric_data)
 
-    def get_ses_account_reputation_metric_data(self, target_datetime=None, period=None, period_timedelta=None):
+    def get_ses_account_reputation_metric_data(self, target_datetime=None, period=None, metric_timedelta=None):
         self.logger.debug('Fetching SES account reputation metrics...')
 
         params = self.get_ses_account_reputation_metric_params(
             target_datetime=target_datetime,
             period=period,
-            period_timedelta=period_timedelta)
+            metric_timedelta=metric_timedelta)
 
         self._log_get_ses_account_reputation_metrics_request(params)
 
@@ -75,12 +78,12 @@ class CloudWatchService(object):
 
         return response['MetricDataResults']
 
-    def get_ses_account_reputation_metric_params(self, target_datetime=None, period=None, period_timedelta=None):
+    def get_ses_account_reputation_metric_params(self, target_datetime=None, period=None, metric_timedelta=None):
         if period is None:
             period = self.ses_reputation_period
 
-        if period_timedelta is None:
-            period_timedelta = self.ses_reputation_period_timedelta
+        if metric_timedelta is None:
+            metric_timedelta = self.ses_reputation_metric_timedelta
 
         if target_datetime is None:
             target_datetime = datetime.utcnow()
@@ -114,7 +117,7 @@ class CloudWatchService(object):
                     'ReturnData': True
                 }
             ],
-            'StartTime': target_datetime - timedelta(seconds=period_timedelta),
+            'StartTime': target_datetime - timedelta(seconds=metric_timedelta),
             'EndTime': target_datetime
         }
 

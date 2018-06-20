@@ -34,7 +34,7 @@ class HttpClient(object):
     @property
     def logger(self):
         '''
-        Returns the logger.
+        obj (logger.Logger): The logger instance.
         '''
 
         return self._logger

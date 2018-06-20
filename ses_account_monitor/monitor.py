@@ -134,7 +134,7 @@ class Monitor(object):
 
         return self._get_pending_notifications()
 
-    def handle_ses_reputation(self, target_datetime=None, period=None, period_timedelta=None):
+    def handle_ses_reputation(self, target_datetime=None, period=None, metric_timedelta=None):
         if not self.monitor_ses_reputation:
             self.logger.debug('Handling SES reputation is DISABLED, skipping...')
             return
@@ -151,7 +151,7 @@ class Monitor(object):
 
         metrics = self.cloudwatch_service.get_ses_account_reputation_metrics(target_datetime=target_datetime,
                                                                              period=period,
-                                                                             period_timedelta=period_timedelta)
+                                                                             metric_timedelta=metric_timedelta)
 
         if metrics.critical:
             self._handle_ses_reputation_critical(metrics=metrics,
