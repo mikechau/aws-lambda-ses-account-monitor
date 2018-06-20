@@ -197,7 +197,7 @@ class Monitor(object):
         self._log_handle_ses_quota_request(utilization_percent, critical_percent, 'CRITICAL')
 
         if self.notify_config.notify_pager_duty_on_ses_sending_quota:
-            self.logger.debug('Pager Duty alerting is ENABLED, queuing TRIGGER event...')
+            self.logger.debug('PagerDuty alerting is ENABLED, queuing TRIGGER event...')
             self.pager_duty_service.enqueue_ses_account_sending_quota_trigger_event(volume=volume,
                                                                                     max_volume=max_volume,
                                                                                     utilization_percent=utilization_percent,
@@ -205,7 +205,7 @@ class Monitor(object):
                                                                                     metric_ts=metric_iso_ts,
                                                                                     event_iso_ts=event_iso_ts)
         else:
-            self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
+            self.logger.debug('PagerDuty alerting is DISABLED, skipping...')
 
         if self.notify_config.notify_slack_on_ses_sending_quota:
             self.logger.debug('Slack notifications is ENABLED, queuing message...')
@@ -234,10 +234,10 @@ class Monitor(object):
         self._log_handle_ses_quota_request(utilization_percent, warning_percent, 'WARNING')
 
         if self.notify_config.notify_pager_duty_on_ses_sending_quota:
-            self.logger.debug('Pager Duty alerting is ENABLED, queuing RESOLVE event...')
+            self.logger.debug('PagerDuty alerting is ENABLED, queuing RESOLVE event...')
             self.pager_duty_service.enqueue_ses_account_sending_quota_resolve_event()
         else:
-            self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
+            self.logger.debug('PagerDuty alerting is DISABLED, skipping...')
 
         if self.notify_config.notify_slack_on_ses_sending_quota:
             self.logger.debug('Slack notifications is ENABLED, queuing message...')
@@ -260,10 +260,10 @@ class Monitor(object):
         self._log_handle_ses_quota_request(utilization_percent, warning_percent, 'OK')
 
         if self.notify_config.notify_pager_duty_on_ses_sending_quota:
-            self.logger.debug('Pager Duty alerting is ENABLED, queuing RESOLVE event...')
+            self.logger.debug('PagerDuty alerting is ENABLED, queuing RESOLVE event...')
             self.pager_duty_service.enqueue_ses_account_sending_quota_resolve_event()
         else:
-            self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
+            self.logger.debug('PagerDuty alerting is DISABLED, skipping...')
 
         self._log_handle_ses_quota_response()
 
@@ -284,13 +284,13 @@ class Monitor(object):
             self.logger.debug('SES management strategy is %s, status is %s, skipping...', SES_STRATEGY_MANAGED, THRESHOLD_CRITICAL)
 
         if self.notify_config.notify_pager_duty_on_ses_reputation:
-            self.logger.debug('Pager Duty alerting is ENABLED, queuing TRIGGER event...')
+            self.logger.debug('PagerDuty alerting is ENABLED, queuing TRIGGER event...')
             self.pager_duty_service.enqueue_ses_account_reputation_trigger_event(metrics=danger_metrics,
                                                                                  event_iso_ts=event_iso_ts,
                                                                                  event_unix_ts=event_unix_ts,
                                                                                  action=action)
         else:
-            self.logger.debug('Pager Duty alerting is DISABLED, skipping...')
+            self.logger.debug('PagerDuty alerting is DISABLED, skipping...')
 
         if self.notify_config.notify_slack_on_ses_reputation:
             self.logger.debug('Slack notifications is ENABLED, queuing message...')

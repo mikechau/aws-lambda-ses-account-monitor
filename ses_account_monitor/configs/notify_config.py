@@ -18,8 +18,8 @@ NotifyConfig = namedtuple('NotifyConfig', ('notify_pager_duty_on_ses_reputation'
 class:NotifyConfig
 
 Args:
-    notify_pager_duty_on_ses_reputation (bool): Flag to enable SES reputation notifications to Pager Duty.
-    notify_pager_duty_on_ses_sending_quota (bool): Flag to enable SES sending quota notifications to Pager Duty.
+    notify_pager_duty_on_ses_reputation (bool): Flag to enable SES reputation notifications to PagerDuty.
+    notify_pager_duty_on_ses_sending_quota (bool): Flag to enable SES sending quota notifications to PagerDuty.
     notify_slack_on_ses_reputation (bool): Flag to enable SES reputation notifications to Slack.
     notify_slack_on_ses_sending_quota (bool): Flag to enable SES sending quota notifications to Slack.
 '''

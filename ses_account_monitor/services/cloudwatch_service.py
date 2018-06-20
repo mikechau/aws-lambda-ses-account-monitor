@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-ses_account_monitor.configs.cloudwatch_service
+ses_account_monitor.services.cloudwatch_service
 ~~~~~~~~~~~~~~~~
 
 CloudWatch service module.
@@ -260,7 +260,10 @@ class CloudWatchService(object):
                 Values (:obj:`list` of :obj:`float`): List of floats.
 
         Returns:
-            tuple: (label, value, iso8601_timestamp)
+            tuple:
+                label (str): The metric label.
+                value (float): The metric value.
+                iso8601_timestamp (str): ISO 8601 formatted timestamp string.
         '''
 
         if not metric['Timestamps']:
