@@ -292,7 +292,7 @@ class CloudWatchService(object):
         if session_config:
             session = boto3.Session(**self._session_config)
         else:
-            session = boto3.Session()
+            session = boto3.Session(**LAMBDA_AWS_SESSION_CONFIG)
 
         return session.client('cloudwatch')
 
