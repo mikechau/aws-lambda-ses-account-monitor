@@ -1,6 +1,6 @@
-.PHONY: lint clean major minor patch test release master
-
 VERSION := $(shell egrep -o "([0-9]{1,}\.)+[0-9]{1,}" .bumpversion.cfg)
+
+.PHONY: all project init dev pip build clean major minor patch release master lint test
 
 all: project
 
