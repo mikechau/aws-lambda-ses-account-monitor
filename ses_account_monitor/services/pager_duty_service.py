@@ -300,7 +300,7 @@ class PagerDutyService(HttpClient):
                                                                                                     action=action,
                                                                                                     ts=event_unix_ts),
                                            client='AWS Console',
-                                           client_url=self.config.ses_console_url)
+                                           client_url=self.config.ses_reputation_dashboard_url)
 
     def build_ses_account_sending_quota_resolve_event_payload(self):
         '''

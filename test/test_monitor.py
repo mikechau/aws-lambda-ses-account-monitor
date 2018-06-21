@@ -212,7 +212,7 @@ def test_handle_ses_sending_quota_critical(monitor, target_datetime):
 
     assert len(result['pager_duty']) == 1
     assert result['pager_duty'][0] == {
-        'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
+        'client_url': 'https://undefined.console.aws.amazon.com/ses/home?region=undefined#dashboard:',
         'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
         'routing_key': None,
         'client': 'AWS Console',
@@ -264,7 +264,7 @@ def test_handle_ses_sending_quota_warning(monitor, target_datetime):
              'fallback': 'SES account sending rate has breached WARNING threshold.',
              'fields': [{'short': True,
                          'title': 'Service',
-                         'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Sending>'},
+                         'value': '<https://undefined.console.aws.amazon.com/ses/home?region=undefined#dashboard:|SES Account Sending>'},
                         {'short': True,
                          'title': 'Account',
                          'value': 'undefined'},
@@ -338,7 +338,7 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
 
     assert len(result['pager_duty']) == 1
     assert result['pager_duty'][0] == {'client': 'AWS Console',
-                                       'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
+                                       'client_url': 'https://undefined.console.aws.amazon.com/ses/home?region=undefined#reputation-dashboard:',
                                        'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_reputation',
                                        'event_action': 'trigger',
                                        'payload': {'class': 'ses_account_reputation',
@@ -370,7 +370,7 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
              'fallback': 'SES account reputation has breached CRITICAL threshold.',
              'fields': [{'short': True,
                          'title': 'Service',
-                         'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Reputation>'},
+                         'value': '<https://undefined.console.aws.amazon.com/ses/home?region=undefined#reputation-dashboard:|SES Account Reputation>'},
                         {'short': True,
                          'title': 'Account',
                          'value': 'undefined'},
@@ -427,7 +427,7 @@ def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_result
              'fields': [
                  {'short': True,
                   'title': 'Service',
-                  'value': '<https://undefined.console.aws.amazon.com/ses/?region=undefined|SES Account Reputation>'},
+                  'value': '<https://undefined.console.aws.amazon.com/ses/home?region=undefined#reputation-dashboard:|SES Account Reputation>'},
                  {'short': True,
                   'title': 'Account',
                   'value': 'undefined'},

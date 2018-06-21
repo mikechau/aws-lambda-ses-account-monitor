@@ -22,7 +22,7 @@ def service(webhook_url):
 @pytest.fixture
 def ses_account_sending_quota_trigger_event_payload():
     return {'client': 'AWS Console',
-            'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
+            'client_url': 'https://undefined.console.aws.amazon.com/ses/home?region=undefined#dashboard:',
             'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
             'event_action': 'trigger',
             'payload': {'class': 'ses_account_sending_quota',
@@ -47,7 +47,7 @@ def ses_account_sending_quota_trigger_event_payload():
 @pytest.fixture
 def ses_account_reputation_trigger_event_payload():
     return {'client': 'AWS Console',
-            'client_url': 'https://undefined.console.aws.amazon.com/ses/?region=undefined',
+            'client_url': 'https://undefined.console.aws.amazon.com/ses/home?region=undefined#reputation-dashboard:',
             'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_reputation',
             'event_action': 'trigger',
             'payload': {'class': 'ses_account_reputation',
