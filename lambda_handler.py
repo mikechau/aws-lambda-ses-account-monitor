@@ -1,25 +1,43 @@
 # -*- coding: utf-8 -*-
 
+'''
+AWS Lambda function handler.
+'''
+
 import logging
 
-from ses_account_monitor.config import LOG_LEVEL
+import boto3
+
+from ses_account_monitor.config import (
+    LAMBDA_AWS_SESSION_CONFIG,
+    LOG_LEVEL)
 from ses_account_monitor.monitor import Monitor
 from ses_account_monitor.util import (
     json_dump_request_event,
-    json_dump_response_event
-)
+    json_dump_response_event)
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 
+session = boto3.Session(**LAMBDA_AWS_SESSION_CONFIG)
+ses_client = session.client('ses')
+cloudwatch_client = session.client('cloudwatch')
+
 
 def lambda_handler(event, context):
+    '''
+    Args:
+        event (dict/list/str/int/float/NoneType): AWS event data.
+        context (LambdaContext): Lambda runtime information.
+    '''
+
     logger.info(json_dump_request_event(class_name='lambda_handler',
                                         method_name='lambda_handler',
                                         params=event))
 
-    monitor = Monitor()
+    monitor = Monitor(ses_client=ses_client,
+                      cloudwatch_client=cloudwatch_client)
     monitor.handle_ses_sending_quota()
     monitor.handle_ses_reputation()
 
