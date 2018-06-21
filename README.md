@@ -57,7 +57,7 @@ The handler is located at `lambda_handler.lambda_handler`.
 | LAMBDA_AWS_REGION | `str` | undefined | us-west-2 | AWS region. |
 | LAMBDA_ENVIRONMENT | `str` | undefined | global | Lambda environment. |
 | LAMBDA_NAME | `str` | ses-account-monitor | ses-monitor | Lambda name. |
-| LAMBDA_SERVICE_NAME | `str` | $LAMBDA_AWS_ACCOUNT_NAME-$LAMBDA_AWS_REGION-$LAMBDA_ENVIRONMENT-$LAMBDA_NAME | supercoolco-us-west-2-global-ses-account-monitor | Lambda service name, if you want to override the inferred name. |
+| LAMBDA_SERVICE_NAME | `str` | `$LAMBDA_AWS_ACCOUNT_NAME-$LAMBDA_AWS_REGION-$LAMBDA_ENVIRONMENT-$LAMBDA_NAME` | supercoolco-us-west-2-global-ses-account-monitor | Lambda service name, if you want to override the inferred name. |
 | LOG_LEVEL | `str` | INFO | WARNING | Log level. |
 | MONITOR_SES_REPUTATION | `bool` | `True` | `False` | Flag to monitor SES account reputation. |
 | MONITOR_SES_SENDING_QUOTA | `bool` | `True` | `False` | Flag to monitor SES account sending quota. |
@@ -73,14 +73,14 @@ The handler is located at `lambda_handler.lambda_handler`.
 | SES_COMPLAINT_RATE_WARNING_PERCENT | `float` | 0.01 | 0.03 | Percentage for warning threshold, AWS recommendation is at 0.1. |
 | SES_SENDING_QUOTA_WARNING_PERCENT | `float` | 80 | 85 | Percentage for warning threshold. |
 | SES_SENDING_QUOTA_CRITICAL_PERCENT | `float` | 90 | 95 | Percentage for critical threshold. |
-| SES_CONSOLE_URL | `str` | https://$LAMBDA_AWS_REGION.console.aws.amazon.com/ses/?region=$LAMBDA_AWS_REGION | - | SES console url. |
+| SES_CONSOLE_URL | `str` | `https://$LAMBDA_AWS_REGION.console.aws.amazon.com/ses/?region=$LAMBDA_AWS_REGION` | - | SES console url. |
 | SES_REPUTATION_DASHBOARD_URL | `str` | - | - | SES reputation dashboard url. |
 | SES_REPUTATION_PERIOD | `int` | 900 | 1800 | - | The collection period in seconds. |
 | SES_REPUTATION_METRIC_TIMEDELTA | `int` | 1800 | 3600 | Used to calculate the start time for retrieving the metric data. |
 | SES_MANAGEMENT_STRATEGY | `str` | alert | managed | Strategy for how to handle metrics at threshold levels. Default is to alert only. Switch to managed to enable SES autopausing. |
-| SLACK_CHANNELS | `list` | '' | #general,#dev-ops,#alerts | Comma delimited list of channels to post notifications to. |
+| SLACK_CHANNELS | `list` | `''` | `#general,#dev-ops,#alerts` | Comma delimited list of channels to post notifications to. |
 | SLACK_FOOTER_ICON_URL | `str` | https://platform.slack-edge.com/img/default_application_icon.png | - | URL for the Slack message footer icon. |
-| SLACK_ICON_EMOJI | `str` | None | :dragon: | Slack icon emoji, optional. |
+| SLACK_ICON_EMOJI | `str` | None | `:dragon:` | Slack icon emoji, optional. |
 | SLACK_WEBHOOK_URL | `str` | None | https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX | Slack webook url. |
 
 ## License
