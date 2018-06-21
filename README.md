@@ -101,8 +101,6 @@ The handler is located at `lambda_handler.lambda_handler`.
 | SES_COMPLAINT_RATE_WARNING_PERCENT | `float` | 0.01 | 0.03 | Percentage for warning threshold, AWS recommendation is at 0.1. |
 | SES_SENDING_QUOTA_WARNING_PERCENT | `float` | 80 | 85 | Percentage for warning threshold. |
 | SES_SENDING_QUOTA_CRITICAL_PERCENT | `float` | 90 | 95 | Percentage for critical threshold. |
-| SES_CONSOLE_URL | `str` | `https://$LAMBDA_AWS_REGION.console.aws.amazon.com/ses/?region=$LAMBDA_AWS_REGION` | - | SES console url. |
-| SES_REPUTATION_DASHBOARD_URL | `str` | - | - | SES reputation dashboard url. |
 | SES_REPUTATION_PERIOD | `int` | 900 | 1800 | - | The collection period in seconds. |
 | SES_REPUTATION_METRIC_TIMEDELTA | `int` | 1800 | 3600 | Used to calculate the start time for retrieving the metric data. |
 | SES_MONITOR_STRATEGY | `str` | alert | managed | Strategy for how to handle metrics at threshold levels. Default is to alert only. Switch to managed to enable SES autopausing. |

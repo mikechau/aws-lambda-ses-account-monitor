@@ -73,9 +73,10 @@ SES_COMPLAINT_RATE_WARNING_PERCENT = float(os.getenv('SES_COMPLAINT_RATE_WARNING
 SES_SENDING_QUOTA_WARNING_PERCENT = float(os.getenv('SES_SENDING_QUOTA_WARNING_PERCENT', 80))
 SES_SENDING_QUOTA_CRITICAL_PERCENT = float(os.getenv('SES_SENDING_QUOTA_CRITICAL_PERCENT', 90))
 
-SES_CONSOLE_URL = os.getenv('SES_CONSOLE_URL',
-                            'https://{region}.console.aws.amazon.com/ses/?region={region}'.format(region=LAMBDA_AWS_REGION))
-SES_REPUTATION_DASHBOARD_URL = os.getenv('SES_REPUTATION_DASHBOARD_URL', SES_CONSOLE_URL)
+SES_BASE_URL = 'https://{region}.console.aws.amazon.com/ses/home?region={region}'.format(region=LAMBDA_AWS_REGION)
+
+SES_CONSOLE_URL = os.getenv('SES_CONSOLE_URL', '{}#dashboard:'.format(SES_BASE_URL))
+SES_REPUTATION_DASHBOARD_URL = os.getenv('SES_REPUTATION_DASHBOARD_URL', '{}##reputation-dashboard:'.format(SES_BASE_URL))
 
 SES_REPUTATION_PERIOD = int(os.getenv('SES_REPUTATION_PERIOD', 900))
 SES_REPUTATION_METRIC_TIMEDELTA = int(os.getenv('SES_REPUTATION_METRIC_TIMEDELTA', 1800))
