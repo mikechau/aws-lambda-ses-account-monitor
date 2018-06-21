@@ -60,7 +60,9 @@ class Monitor(object):
                  ses_management_strategy=None,
                  notify_config=False,
                  thresholds=None,
+                 cloudwatch_client=None,
                  cloudwatch_service=None,
+                 ses_client=None,
                  ses_service=None,
                  slack_service=None,
                  pager_duty_service=None,
@@ -75,9 +77,13 @@ class Monitor(object):
                 Default is None, which will use the configuration specified in the config module.
             thresholds (:obj:`dict`, optional): The threshold configuration.
                 Default is None, which will use the configuration specified in the config module.
-            cloudwatch_service (:obj:`botocore.client.CloudWatch`, optional): CloudWatch service instance.
+            cloudwatch_client (:obj:`botocore.client.CloudWatch`, optional): CloudWatch client.
+                Specify this to pass it to the cloudwatch_service and cloudwatch_service must not be set.
+            cloudwatch_service (:obj:`CloudWatchService`, optional): CloudWatch service instance.
                 Default is None, which will create instance using configuration settings from the config module.
-            ses_service (:obj:`botocore.client.SES`, optional): SES service instance.
+            ses_client (:obj:`botocore.client.SES`, optional): SES client.
+                Specify this to pass it to the ses_service and ses_service must not be set.
+            ses_service (:obj:`SesService`, optional): SES service instance.
                 Default is None, which will create instance using configuration settings from the config module.
             slack_service (:obj:`SlackService`, optional): Slack service instance.
                 Default is None, which will create instance using configuration settings from the config module.
@@ -94,8 +100,8 @@ class Monitor(object):
         self.monitor_ses_reputation = monitor_ses_reputation
         self.monitor_ses_sending_quota = monitor_ses_sending_quota
         self.ses_management_strategy = (ses_management_strategy or SES_MANAGEMENT_STRATEGY)
-        self.ses_service = (ses_service or SesService())
-        self.cloudwatch_service = (cloudwatch_service or CloudWatchService())
+        self.ses_service = (ses_service or SesService(client=ses_client))
+        self.cloudwatch_service = (cloudwatch_service or CloudWatchService(client=cloudwatch_client))
         self.pager_duty_service = (pager_duty_service or PagerDutyService())
         self.slack_service = (slack_service or SlackService())
 
