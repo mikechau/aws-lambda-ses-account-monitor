@@ -16,6 +16,7 @@ from ses_account_monitor.configs import (
     PagerDutyServiceConfig,
     SlackServiceConfig)
 
+
 # STATIC CONSTANTS
 ACTION_ALERT = 'alert'
 ACTION_PAUSE = 'pause'
@@ -38,10 +39,11 @@ LAMBDA_AWS_SESSION_CONFIG = {
 }
 LAMBDA_ENVIRONMENT = os.getenv('LAMBDA_ENVIRONMENT', 'undefined')
 LAMBDA_NAME = os.getenv('LAMBDA_NAME', 'ses-account-monitor')
-LAMBDA_SERVICE_NAME = os.getenv('LAMBDA_SERVICE_NAME', '{account}-{region}-{environment}-{name}'.format(account=LAMBDA_AWS_ACCOUNT_NAME,
-                                                                                                        region=LAMBDA_AWS_REGION,
-                                                                                                        environment=LAMBDA_ENVIRONMENT,
-                                                                                                        name=LAMBDA_NAME))
+LAMBDA_SERVICE_NAME = os.getenv('LAMBDA_SERVICE_NAME',
+                                '{account}-{region}-{environment}-{name}'.format(account=LAMBDA_AWS_ACCOUNT_NAME,
+                                                                                 region=LAMBDA_AWS_REGION,
+                                                                                 environment=LAMBDA_ENVIRONMENT,
+                                                                                 name=LAMBDA_NAME))
 
 # LOG CONSTANTS
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
