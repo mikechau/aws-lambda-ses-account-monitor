@@ -16,7 +16,7 @@ The lambda should be set to run on a period of every 15 minutes.
 
 It will check to see if the SES account sending quota is at the thresholds, and if so queue up notification alerts.
 
-Then it will check the SES account reputation metrics. If they are at or exceed thresholds, if the `SES_MANAGEMENT_STRATEGY` of `manged` is set, then SES account sending will be disabled (paused), until the reputation is in a healthy state. After that notifications are queued up.
+Then it will check the SES account reputation metrics. If they are at or exceed thresholds, if the `SES_MONITOR_STRATEGY` of `manged` is set, then SES account sending will be disabled (paused), until the reputation is in a healthy state. After that notifications are queued up.
 
 Finally all the notifications are flushed and sent out. If any notifications fail to send, then a exception is thrown, to let AWS automatically retry the lambda.
 
@@ -105,7 +105,7 @@ The handler is located at `lambda_handler.lambda_handler`.
 | SES_REPUTATION_DASHBOARD_URL | `str` | - | - | SES reputation dashboard url. |
 | SES_REPUTATION_PERIOD | `int` | 900 | 1800 | - | The collection period in seconds. |
 | SES_REPUTATION_METRIC_TIMEDELTA | `int` | 1800 | 3600 | Used to calculate the start time for retrieving the metric data. |
-| SES_MANAGEMENT_STRATEGY | `str` | alert | managed | Strategy for how to handle metrics at threshold levels. Default is to alert only. Switch to managed to enable SES autopausing. |
+| SES_MONITOR_STRATEGY | `str` | alert | managed | Strategy for how to handle metrics at threshold levels. Default is to alert only. Switch to managed to enable SES autopausing. |
 | SLACK_CHANNELS | `list` | `''` | `#general,#dev-ops,#alerts` | Comma delimited list of channels to post notifications to. |
 | SLACK_FOOTER_ICON_URL | `str` | https://platform.slack-edge.com/img/default_application_icon.png | - | URL for the Slack message footer icon. |
 | SLACK_ICON_EMOJI | `str` | None | `:dragon:` | Slack icon emoji, optional. |

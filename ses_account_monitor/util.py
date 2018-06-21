@@ -110,7 +110,7 @@ def unix_timestamp(dt=None):
         int: UNIX timestamp.
     '''
 
-    dt = (dt or datetime.now())
+    dt = (dt or datetime.now(timezone.utc))
     dt_utc = dt.astimezone(tz=timezone.utc)
     unix = dt_utc.timestamp()
 
@@ -129,7 +129,7 @@ def iso8601_timestamp(dt=None):
         str: ISO 8601 timestamp.
     '''
 
-    dt = (dt or datetime.now())
+    dt = (dt or datetime.now(timezone.utc))
     dt_utc = dt.astimezone(tz=timezone.utc)
 
     return dt_utc.isoformat()
@@ -143,7 +143,22 @@ def current_datetime():
         datetime: Current datetime in UTC.
     '''
 
-    dt = datetime.noe()
+    dt = datetime.now(timezone.utc)
     dt_utc = dt.astimezone(tz=timezone.utc)
 
     return dt_utc
+
+
+def get_utilization_percentage(current, total):
+    '''
+    Calculate the utilization percentage.
+
+    Args:
+        current (float/int): The current amount.
+        total (float/int): The total amount.
+
+    Returns:
+        float: The utilization percentage.
+    '''
+
+    return (current / total) * 100.0

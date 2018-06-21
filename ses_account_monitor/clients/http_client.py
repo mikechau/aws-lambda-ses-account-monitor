@@ -109,6 +109,6 @@ class HttpClient(object):
                                      method_name='post_json',
                                      response=response.json(),
                                      details={
-                                        'url': response.url,
-                                        'status_code': response.status_code
+                                         'url': response.url,
+                                         'status_code': response.status_code
                                      }))

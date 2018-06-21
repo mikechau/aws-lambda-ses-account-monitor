@@ -22,9 +22,9 @@ from ses_account_monitor.config import (
     MONITOR_SES_REPUTATION,
     MONITOR_SES_SENDING_QUOTA,
     NOTIFY_CONFIG,
-    SES_MANAGEMENT_STRATEGY,
-    SES_STRATEGY_ALERT,
-    SES_STRATEGY_MANAGED,
+    SES_MONITOR_STRATEGY,
+    SES_MONITOR_STRATEGY_ALERT,
+    SES_MONITOR_STRATEGY_MANAGED,
     SES_SENDING_QUOTA_WARNING_PERCENT,
     SES_SENDING_QUOTA_CRITICAL_PERCENT,
     THRESHOLD_CRITICAL,
@@ -99,7 +99,7 @@ class Monitor(object):
 
         self.monitor_ses_reputation = monitor_ses_reputation
         self.monitor_ses_sending_quota = monitor_ses_sending_quota
-        self.ses_management_strategy = (ses_management_strategy or SES_MANAGEMENT_STRATEGY)
+        self.ses_management_strategy = (ses_management_strategy or SES_MONITOR_STRATEGY)
         self.ses_service = (ses_service or SesService(client=ses_client))
         self.cloudwatch_service = (cloudwatch_service or CloudWatchService(client=cloudwatch_client))
         self.pager_duty_service = (pager_duty_service or PagerDutyService())
@@ -173,17 +173,19 @@ class Monitor(object):
             dict: Queued notifications for PagerDuty and Slack.
                 pager_duty (collections.deque): Pager Duty events queue.
                 slack (collections.deque): Slack messages queue.
+
+            A empty dict will be returned if SES account sending quota monitoring is disabled or if the strategy is not a valid one.
         '''
 
         if not self.monitor_ses_sending_quota:
             self.logger.debug('Handling SES account sending quota is DISABLED, skipping...')
-            return
+            return {}
 
         self.logger.debug('Handling SES account sending quota...')
 
-        if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
+        if (self.ses_management_strategy != SES_MONITOR_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_MONITOR_STRATEGY_ALERT):
             self.logger.debug('SES management strategy %s is not VALID, skipping!', self.ses_management_strategy)
-            return
+            return {}
 
         target_datetime = (target_datetime or current_datetime())
         event_iso_ts = iso8601_timestamp(target_datetime)
@@ -226,17 +228,19 @@ class Monitor(object):
             dict: Queued notifications for PagerDuty and Slack.
                 pager_duty (collections.deque): Pager Duty events queue.
                 slack (collections.deque): Slack messages queue.
-        '''
 
-        if not self.monitor_ses_reputation:
-            self.logger.debug('Handling SES reputation is DISABLED, skipping...')
-            return
+            A empty dict will be returned if SES account sending quota monitoring is disabled or if the strategy is not a valid one.
+        '''
 
         self.logger.debug('Handling SES account reputation...')
 
-        if (self.ses_management_strategy != SES_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_STRATEGY_ALERT):
+        if not self.monitor_ses_reputation:
+            self.logger.debug('SES reputation is DISABLED, skipping...')
+            return {}
+
+        if (self.ses_management_strategy != SES_MONITOR_STRATEGY_MANAGED) and (self.ses_management_strategy != SES_MONITOR_STRATEGY_ALERT):
             self.logger.debug('SES management strategy %s is not VALID, skipping!', self.ses_management_strategy)
-            return
+            return {}
 
         target_datetime = (target_datetime or current_datetime())
         event_iso_ts = iso8601_timestamp(target_datetime)
@@ -445,12 +449,12 @@ class Monitor(object):
         danger_metrics = (metrics.critical + metrics.warning)
         action = ACTION_ALERT
 
-        if self.ses_management_strategy == SES_STRATEGY_MANAGED:
-            self.logger.debug('SES management strategy is %s, status is %s, DISABLING...', SES_STRATEGY_MANAGED, THRESHOLD_CRITICAL)
+        if self.ses_management_strategy == SES_MONITOR_STRATEGY_MANAGED:
+            self.logger.debug('SES management strategy is %s, status is %s, DISABLING...', SES_MONITOR_STRATEGY_MANAGED, THRESHOLD_CRITICAL)
             self.ses_service.disable_account_sending()
             action = ACTION_DISABLE
         else:
-            self.logger.debug('SES management strategy is %s, status is %s, skipping...', SES_STRATEGY_MANAGED, THRESHOLD_CRITICAL)
+            self.logger.debug('SES management strategy is %s, status is %s, skipping...', SES_MONITOR_STRATEGY_MANAGED, THRESHOLD_CRITICAL)
 
         if self.notify_config.notify_pager_duty_on_ses_reputation:
             self.logger.debug('PagerDuty alerting is ENABLED, queuing TRIGGER event...')
@@ -490,8 +494,8 @@ class Monitor(object):
         self._log_handle_ses_reputation_request(metrics=metrics,
                                                 status=THRESHOLD_WARNING)
 
-        if self.ses_management_strategy == SES_STRATEGY_MANAGED:
-            self.logger.debug('SES management strategy is %s, status is %s, ENABLING...', SES_STRATEGY_MANAGED, THRESHOLD_WARNING)
+        if self.ses_management_strategy == SES_MONITOR_STRATEGY_MANAGED:
+            self.logger.debug('SES management strategy is %s, status is %s, ENABLING...', SES_MONITOR_STRATEGY_MANAGED, THRESHOLD_WARNING)
 
             if not self.ses_service.is_account_sending_enabled():
                 self.logger.debug('SES account sending is currently DISABLED! ENABLING...')
@@ -499,7 +503,7 @@ class Monitor(object):
 
                 action = ACTION_ENABLE
         else:
-            self.logger.debug('SES management strategy is %s, status is %s, skipping...', SES_STRATEGY_MANAGED, THRESHOLD_CRITICAL)
+            self.logger.debug('SES management strategy is %s, status is %s, skipping...', SES_MONITOR_STRATEGY_MANAGED, THRESHOLD_CRITICAL)
 
         if self.notify_config.notify_slack_on_ses_reputation:
             self.logger.debug('Slack notifications is ENABLED, queuing message...')
@@ -528,8 +532,8 @@ class Monitor(object):
         self._log_handle_ses_reputation_request(metrics=metrics,
                                                 status=THRESHOLD_OK)
 
-        if self.ses_management_strategy == SES_STRATEGY_MANAGED:
-            self.logger.debug('SES management strategy is %s, status is %s, ENABLING...', SES_STRATEGY_MANAGED, THRESHOLD_OK)
+        if self.ses_management_strategy == SES_MONITOR_STRATEGY_MANAGED:
+            self.logger.debug('SES management strategy is %s, status is %s, ENABLING...', SES_MONITOR_STRATEGY_MANAGED, THRESHOLD_OK)
 
             if not self.ses_service.is_account_sending_enabled():
                 self.logger.debug('SES account sending is currently DISABLED! ENABLING...')
@@ -546,7 +550,7 @@ class Monitor(object):
                     self.logger.debug('Slack notifications is DISABLED, skipping...')
 
         else:
-            self.logger.debug('SES management strategy is %s, status is %s, skipping...', SES_STRATEGY_MANAGED, THRESHOLD_OK)
+            self.logger.debug('SES management strategy is %s, status is %s, skipping...', SES_MONITOR_STRATEGY_MANAGED, THRESHOLD_OK)
 
         self._log_handle_ses_reputation_response()
 

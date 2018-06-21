@@ -32,6 +32,44 @@ THRESHOLD_COLOR = {
 }
 
 
+def get_color(threshold_name):
+    '''
+    Get the Slack color based on the threshold name.
+
+    Args:
+        threshold_name (str): Threshold name. Ex: CRITICAL, WARNING, OK.
+
+    Returns:
+        str: The Slack color.
+    '''
+
+    return THRESHOLD_COLOR.get(threshold_name.upper(), '')
+
+def build_ses_reputation_text(threshold_name):
+    '''
+    Generate the SES reputation text, returns the fallback text and primary text.
+
+    Args:
+        threshold_name (str): Threshold name. Ex: CRITICAL, WARNING, OK.
+
+    Returns:
+        tuple: The fallback text and primary text.
+            fallback_text (str): Slack fallback message text.
+            primary_text (str): Slack primary message text.
+    '''
+
+    threshold_name = threshold_name.upper()
+
+    if (threshold_name == THRESHOLD_CRITICAL) or (threshold_name == THRESHOLD_WARNING):
+        fallback_text = 'SES account reputation has breached {} threshold.'.format(threshold_name)
+        primary_text = 'SES account reputation has breached the {} threshold.'.format(threshold_name)
+    elif threshold_name == THRESHOLD_OK:
+        fallback_text = 'SES account reputation has recovered.'
+        primary_text = 'SES account reputation status is {}.'.format(threshold_name)
+
+    return (fallback_text, primary_text)
+
+
 class SlackService(HttpClient):
     '''
     Slack service class, inherits HttpClient.
@@ -199,7 +237,7 @@ class SlackService(HttpClient):
         payload = {
             'attachments': [{
                 'fallback': 'SES account sending rate has breached {} threshold.'.format(threshold_name),
-                'color': self._get_color(threshold_name),
+                'color': get_color(threshold_name),
                 'fields': [
                     {
                         'title': 'Service',
@@ -289,13 +327,13 @@ class SlackService(HttpClient):
                 username (str): Slack username.
         '''
 
-        fallback_text, primary_text = self._build_ses_reputation_text(threshold_name)
+        fallback_text, primary_text = build_ses_reputation_text(threshold_name)
 
         message = {
             'attachments': [
                 {
                     'fallback': fallback_text,
-                    'color': self._get_color(threshold_name),
+                    'color': get_color(threshold_name),
                     'fields': [
                         {
                             'title': 'Service',
@@ -356,43 +394,6 @@ class SlackService(HttpClient):
         })
 
         return message
-
-    def _get_color(self, threshold_name):
-        '''
-        Get the Slack color based on the threshold name.
-
-        Args:
-            threshold_name (str): Threshold name. Ex: CRITICAL, WARNING, OK.
-
-        Returns:
-            str: The Slack color.
-        '''
-
-        return THRESHOLD_COLOR.get(threshold_name.upper(), '')
-
-    def _build_ses_reputation_text(self, threshold_name):
-        '''
-        Generate the SES reputation text, returns the fallback text and primary text.
-
-        Args:
-            threshold_name (str): Threshold name. Ex: CRITICAL, WARNING, OK.
-
-        Returns:
-            tuple: The fallback text and primary text.
-                fallback_text (str): Slack fallback message text.
-                primary_text (str): Slack primary message text.
-        '''
-
-        threshold_name = threshold_name.upper()
-
-        if (threshold_name == THRESHOLD_CRITICAL) or (threshold_name == THRESHOLD_WARNING):
-            fallback_text = 'SES account reputation has breached {} threshold.'.format(threshold_name)
-            primary_text = 'SES account reputation has breached the {} threshold.'.format(threshold_name)
-        elif threshold_name == THRESHOLD_OK:
-            fallback_text = 'SES account reputation has recovered.'
-            primary_text = 'SES account reputation status is {}.'.format(threshold_name)
-
-        return (fallback_text, primary_text)
 
     def _build_message_with_channels(self, base_payload):
         '''

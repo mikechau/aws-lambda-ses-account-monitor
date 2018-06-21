@@ -43,6 +43,60 @@ Args:
 '''
 
 
+def build_client(session_config=None):
+    '''
+    Build a CloudWatch client, if a session config is provided, it will use it to create the client.
+
+    Args:
+        session_config (dict):
+            aws_access_key_id (str): AWS access key ID.
+            aws_secret_access_key (str): AWS secret access key.
+            aws_session_token (str): AWS temporary session token.
+            region_name (str): Default region when creating new connections.
+            botocore_session (botocore.session.Session): Use this Botocore session instead of creating a new default one.
+            profile_name (str): The name of a profile to use. If not given, then the default profile is used.
+
+    Returns:
+        obj (botocore.client.CloudWatch): The CloudWatch client.
+    '''
+
+    if session_config:
+        session = boto3.Session(**session_config)
+    else:
+        session = boto3.Session(**LAMBDA_AWS_SESSION_CONFIG)
+
+    return session.client('cloudwatch')
+
+
+def get_last_metric(metric):
+    '''
+    Get last metric from MetricDataResults.
+
+    Args:
+        metric (dict):
+            Id (str): Metric id.
+            Label (str): Metric label.
+            StatusCode (str): Status code.
+            Timestamps (:obj:`list` of :obj:`datetime`): List of datetime objects.
+            Values (:obj:`list` of :obj:`float`): List of floats.
+
+    Returns:
+        tuple:
+            label (str): The metric label.
+            value (float): The metric value.
+            iso8601_timestamp (str): ISO 8601 formatted timestamp string.
+    '''
+
+    if not metric['Timestamps']:
+        return None
+
+    last_ts = max(metric['Timestamps'])
+    last_index = metric['Timestamps'].index(last_ts)
+    last_value = metric['Values'][last_index]
+
+    return (metric['Label'], last_value * 100.0, last_ts.astimezone(timezone.utc).isoformat())
+
+
 class CloudWatchService(object):
     '''
     CloudWatch Service class, interfaces with CloudWatch.
@@ -65,7 +119,7 @@ class CloudWatchService(object):
             ses_reputation_metric_timedelta (:obj:`int`, optional): SES reputation metric timedelta in seconds.
         '''
 
-        self._client = (client or self._build_client(session_config))
+        self._client = (client or build_client(session_config))
         self._logger = (logger or self._build_logger())
 
         self.ses_thresholds = (ses_thresholds or SES_THRESHOLDS)
@@ -232,7 +286,7 @@ class CloudWatchService(object):
                                        warning=[])
 
         for metric in metric_data:
-            last_metric = self._get_last_metric(metric)
+            last_metric = get_last_metric(metric)
             critical_threshold = thresholds[THRESHOLD_CRITICAL][metric['Id']]
             warning_threshold = thresholds[THRESHOLD_WARNING][metric['Id']]
 
@@ -247,58 +301,6 @@ class CloudWatchService(object):
                     results.ok.append((label, current_value, warning_threshold, metric_ts))
 
         return results
-
-    def _get_last_metric(self, metric):
-        '''
-        Get last metric from MetricDataResults.
-
-        Args:
-            metric (dict):
-                Id (str): Metric id.
-                Label (str): Metric label.
-                StatusCode (str): Status code.
-                Timestamps (:obj:`list` of :obj:`datetime`): List of datetime objects.
-                Values (:obj:`list` of :obj:`float`): List of floats.
-
-        Returns:
-            tuple:
-                label (str): The metric label.
-                value (float): The metric value.
-                iso8601_timestamp (str): ISO 8601 formatted timestamp string.
-        '''
-
-        if not metric['Timestamps']:
-            return None
-
-        last_ts = max(metric['Timestamps'])
-        last_index = metric['Timestamps'].index(last_ts)
-        last_value = metric['Values'][last_index]
-
-        return (metric['Label'], last_value * 100.0, last_ts.astimezone(timezone.utc).isoformat())
-
-    def _build_client(self, session_config=None):
-        '''
-        Build a CloudWatch client, if a session config is provided, it will use it to create the client.
-
-        Args:
-            session_config (dict):
-                aws_access_key_id (str): AWS access key ID.
-                aws_secret_access_key (str): AWS secret access key.
-                aws_session_token (str): AWS temporary session token.
-                region_name (str): Default region when creating new connections.
-                botocore_session (botocore.session.Session): Use this Botocore session instead of creating a new default one.
-                profile_name (str): The name of a profile to use. If not given, then the default profile is used.
-
-        Returns:
-            obj (botocore.client.CloudWatch): The CloudWatch client.
-        '''
-
-        if session_config:
-            session = boto3.Session(**session_config)
-        else:
-            session = boto3.Session(**LAMBDA_AWS_SESSION_CONFIG)
-
-        return session.client('cloudwatch')
 
     def _build_logger(self):
         '''

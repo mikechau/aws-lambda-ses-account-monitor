@@ -18,7 +18,32 @@ from ses_account_monitor.config import LAMBDA_AWS_SESSION_CONFIG
 from ses_account_monitor.util import (
     iso8601_timestamp,
     json_dump_request_event,
-    json_dump_response_event)
+    json_dump_response_event,
+    get_utilization_percentage)
+
+
+def build_client(session_config):
+    '''
+    Build a SES client, if a session config is provided, it will use it to create the client.
+
+    Args:
+        session_config (dict):
+            aws_access_key_id (str): AWS access key ID.
+            aws_secret_access_key (str): AWS secret access key.
+            aws_session_token (str): AWS temporary session token.
+            region_name (str): Default region when creating new connections.
+            botocore_session (botocore.session.Session): Use this Botocore session instead of creating a new default one.
+            profile_name (str): The name of a profile to use. If not given, then the default profile is used.
+
+    Returns:
+        obj (botocore.client.SES): The SES client.
+    '''
+
+    if session_config:
+        session = boto3.Session(**session_config)
+    else:
+        session = boto3.Session(**LAMBDA_AWS_SESSION_CONFIG)
+    return session.client('ses')
 
 
 class SesService(object):
@@ -37,7 +62,7 @@ class SesService(object):
             session_config (:obj:`dict`, optional): The SES session, used to configure the client if the client is not provided.
         '''
 
-        self._client = (client or self._build_client(session_config))
+        self._client = (client or build_client(session_config))
         self._logger = (logger or self._build_logger())
 
     @property
@@ -76,7 +101,7 @@ class SesService(object):
         stats = self.get_account_sending_quota()
         volume = stats['SentLast24Hours']
         max_volume = stats['Max24HourSend']
-        usage = self._get_utilization_percentage(volume, max_volume)
+        usage = get_utilization_percentage(volume, max_volume)
         return (volume, max_volume, usage, ts)
 
     def get_account_sending_quota(self):
@@ -101,7 +126,7 @@ class SesService(object):
         '''
 
         stats = self.get_account_sending_quota()
-        usage = self._get_utilization_percentage(stats['SentLast24Hours'], stats['Max24HourSend'])
+        usage = get_utilization_percentage(stats['SentLast24Hours'], stats['Max24HourSend'])
         return usage
 
     def get_account_sending_remaining_percentage(self):
@@ -201,29 +226,6 @@ class SesService(object):
 
         return False
 
-    def _build_client(self, session_config):
-        '''
-        Build a SES client, if a session config is provided, it will use it to create the client.
-
-        Args:
-            session_config (dict):
-                aws_access_key_id (str): AWS access key ID.
-                aws_secret_access_key (str): AWS secret access key.
-                aws_session_token (str): AWS temporary session token.
-                region_name (str): Default region when creating new connections.
-                botocore_session (botocore.session.Session): Use this Botocore session instead of creating a new default one.
-                profile_name (str): The name of a profile to use. If not given, then the default profile is used.
-
-        Returns:
-            obj (botocore.client.SES): The SES client.
-        '''
-
-        if session_config:
-            session = boto3.SesService(**session_config)
-        else:
-            session = boto3.Session(**LAMBDA_AWS_SESSION_CONFIG)
-        return session.client('ses')
-
     def _build_logger(self):
         '''
         Builds a logger instance.
@@ -235,20 +237,6 @@ class SesService(object):
         logger = logging.getLogger(self.__module__)
         logger.addHandler(logging.NullHandler())
         return logger
-
-    def _get_utilization_percentage(self, current, total):
-        '''
-        Calculate the utilization percentage.
-
-        Args:
-            current (float/int): The current amount.
-            total (float/int): The total amount.
-
-        Returns:
-            float: The utilization percentage.
-        '''
-
-        return ((current / total) * 100.0)
 
     def _log_enable_account_sending_request(self):
         '''
