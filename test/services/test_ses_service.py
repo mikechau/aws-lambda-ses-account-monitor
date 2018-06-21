@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+from datetime import (
+    datetime,
+    timezone)
 
 import boto3
 import pytest
@@ -43,8 +45,15 @@ def ses_quota_responses():
 
 
 @pytest.fixture
-def iso8601_date():
-    return datetime(2018, 1, 1, 0, 0, 0, 0).isoformat()
+def datetime_utc():
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0)
+    dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+@pytest.fixture
+def iso8601_date(datetime_utc):
+    return datetime_utc.isoformat()
 
 
 def test_get_account_sending_quota(client, service, ses_quota_responses):

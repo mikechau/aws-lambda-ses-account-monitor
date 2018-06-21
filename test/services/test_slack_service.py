@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+from datetime import (
+    datetime,
+    timezone)
 
 import pytest
 import responses
@@ -124,19 +126,26 @@ def test_post_message(service, webhook_url):
 
 
 @pytest.fixture
-def metrics():
-    return [('Bounce Rate', 1, 100, datetime(2018, 1, 1, 0, 0, 0, 0)),
-            ('Complaint Rate', 1, 100, datetime(2018, 1, 1, 0, 0, 0, 0))]
+def datetime_utc():
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0)
+    dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
-def test_build_ses_account_sending_quota_payload(service, ses_account_sending_quota_payload):
+@pytest.fixture
+def metrics(datetime_utc):
+    return [('Bounce Rate', 1, 100, datetime_utc),
+            ('Complaint Rate', 1, 100, datetime_utc)]
+
+
+def test_build_ses_account_sending_quota_payload(service, ses_account_sending_quota_payload, datetime_utc):
     result = service.build_ses_account_sending_quota_payload(threshold_name='CRITICAL',
                                                              utilization_percent=100,
                                                              threshold_percent=90,
                                                              volume=9000,
                                                              max_volume=9000,
                                                              event_unix_ts=123456789,
-                                                             metric_iso_ts=datetime(2018, 1, 1, 0, 0, 0, 0).isoformat())
+                                                             metric_iso_ts=datetime_utc.isoformat())
 
     assert result == ses_account_sending_quota_payload
 
