@@ -547,22 +547,45 @@ class Monitor(object):
     def _handle_notification_responses(self):
         '''
         Review notification responses returned 4XX-5XX responses.
+
+        Raises:
+            NotificationFailure: When a notification HTTP response is within the 4XX-5XX range.
         '''
 
-        for eid, r in self.pager_duty_service.responses:
-            if (r.status_code >= 400) and (r.status_code <= 500):
-                self.logger.debug('PagerDuty notification FAILURE for event: %s, received: %s.', eid, r.status_code)
-                raise NotificationFailure('Failed to post event to PagerDuty: {event}, status: {status}'.format(event=eid,
-                                                                                                                status=r.status_code))
-        for ch, r in self.slack_service.responses:
-            if (r.status_code >= 400) and (r.status_code <= 500):
-                self.logger.debug('Slack notification FAILURE for channel: %s, received: %s.', ch, r.status_code)
-                raise NotificationFailure('Failed to post to Slack channel: {channel}, status: {status}.'.format(channel=ch,
-                                                                                                                 status=r.status_code))
+        if self.pager_duty_service.dry_run:
+            self.logger.debug('PagerDuty service DRY RUN is ENABLED, skipping notification checks...')
+        else:
+            self.logger.debug('Reviewing PagerDuty notification responses...')
+
+            for eid, r in self.pager_duty_service.responses:
+                if (r.status_code >= 400) and (r.status_code <= 500):
+                    self.logger.debug('PagerDuty notification FAILURE for event: %s, received: %s.', eid, r.status_code)
+                    raise NotificationFailure('Failed to post event to PagerDuty: {event}, status: {status}'.format(event=eid,
+                                                                                                                    status=r.status_code))
+
+        if self.slack_service.dry_run:
+            self.logger.debug('Slack service DRY RUN is ENABLED, skipping notification checks...')
+        else:
+            self.logger.debug('Reviewing Slack notification responses...')
+
+            for ch, r in self.slack_service.responses:
+                if (r.status_code >= 400) and (r.status_code <= 500):
+                    self.logger.debug('Slack notification FAILURE for channel: %s, received: %s.', ch, r.status_code)
+                    raise NotificationFailure('Failed to post to Slack channel: {channel}, status: {status}.'.format(channel=ch,
+                                                                                                                     status=r.status_code))
 
         self.logger.debug('Notifications were all sent successfully!')
 
     def _log_handle_ses_quota_request(self, utilization_percent, threshold_percent, status):
+        '''
+        Log the SES account quota handler request.
+
+        Args:
+            utilization_percent (float/int): Utilization percentage. 80% is 80.
+            threshold_percent (float/int): Threshold percentage. 80% is 80.
+            status (str): The status of the SES account quota. Ex: CRITICAL, WARNING, OK.
+        '''
+
         self.logger.debug('SES account sending percentage is at %s, threshold is at %s, status is %s!',
                           utilization_percent,
                           threshold_percent,
@@ -578,6 +601,10 @@ class Monitor(object):
                                     }))
 
     def _log_handle_ses_quota_response(self):
+        '''
+        Log the SES account quota handler response.
+        '''
+
         self.logger.debug('SES account sending handler complete.')
 
         self.logger.info(
@@ -585,6 +612,10 @@ class Monitor(object):
                                      method_name='handle_ses_quota'))
 
     def _log_handle_ses_reputation_request(self, metrics, status):
+        '''
+        Log the SES account reputation handler request.
+        '''
+
         critical_count = len(metrics.critical)
         warning_count = len(metrics.warning)
         ok_count = len(metrics.ok)
@@ -601,6 +632,10 @@ class Monitor(object):
                                     details=metrics))
 
     def _log_handle_ses_reputation_response(self):
+        '''
+        Log the SES account reputation handler response.
+        '''
+
         self.logger.debug('SES account reputation handler complete.')
 
         self.logger.info(
