@@ -33,9 +33,9 @@ The bounce rate should not exceed 10% and the complaint rate should not exceed 0
 ```shell
 git clone https://github.com/mikechau/aws-lambda-ses-account-monitor.git
 cd aws-lambda-ses-account-monitor
-virtualenv venv -p python3.6
-source venv/bin/activate
-pip install -r requirements-dev.txt
+
+make init
+source ./venv/bin/activate
 ```
 
 ## Testing

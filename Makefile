@@ -6,6 +6,16 @@ all: project
 
 project: clean lint test build
 
+init: dev pip
+
+dev:
+	deactivate | true
+	rm -rf venv
+	virtualenv venv -p python3.6
+
+pip:
+	. ./venv/bin/activate && pip install -r requirements.txt
+
 build:
 	mkdir -p build/src/ses_account_monitor
 	cd ses_account_monitor && cp --parents `find -name \*.py` ../build/src/ses_account_monitor
