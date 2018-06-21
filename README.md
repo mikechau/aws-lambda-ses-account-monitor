@@ -48,3 +48,7 @@ The version is saved to [.bumpversion.cfg](./.bumpversion.cfg).
 Download the package from [releases](https://github.com/mikechau/aws-lambda-ses-account-monitor/releases) or build it locally. The artifact path locally is at `build/lambda-ses-monitor-account.zip`.
 
 The handler is located at `lambda_handler.lambda_handler`.
+
+## License
+
+MIT.
