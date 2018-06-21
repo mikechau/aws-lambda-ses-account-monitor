@@ -12,8 +12,8 @@ import logging
 from collections import namedtuple
 
 from datetime import (
-    datetime,
-    timedelta)
+    timedelta,
+    timezone)
 
 import boto3
 
@@ -25,6 +25,7 @@ from ses_account_monitor.config import (
     THRESHOLD_CRITICAL,
     THRESHOLD_WARNING)
 from ses_account_monitor.util import (
+    current_datetime,
     json_dump_request_event,
     json_dump_response_event)
 
@@ -176,7 +177,7 @@ class CloudWatchService(object):
             metric_timedelta = self.ses_reputation_metric_timedelta
 
         if target_datetime is None:
-            target_datetime = datetime.utcnow()
+            target_datetime = current_datetime()
 
         return {
             'MetricDataQueries': [
@@ -273,7 +274,7 @@ class CloudWatchService(object):
         last_index = metric['Timestamps'].index(last_ts)
         last_value = metric['Values'][last_index]
 
-        return (metric['Label'], last_value * 100.0, last_ts.isoformat())
+        return (metric['Label'], last_value * 100.0, last_ts.astimezone(timezone.utc).isoformat())
 
     def _build_client(self, session_config=None):
         '''

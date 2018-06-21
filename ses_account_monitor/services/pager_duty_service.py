@@ -9,6 +9,7 @@ PagerDuty service module.
 
 from __future__ import division
 
+from datetime import timezone
 from collections import deque
 
 from ses_account_monitor.clients.http_client import HttpClient
@@ -267,7 +268,7 @@ class PagerDutyService(HttpClient):
             metrics (:obj:`list` of :obj:`tuple`): List of tuples containing the metrics.
             event_iso_ts (:obj:`str`, optional): ISO 8601 timestamp of when the event occurred.
                 Default is None, which will cause the current time to be used.
-            event_unix_ts (:obj:`int/str`, optional): UNIX timestamp of when the event occurred.
+        event_unix_ts (:obj:`int/str`, optional): UNIX timestamp of when the event occurred.
                 Default is None, which will cause the current time to be used.
             action (:obj:`str`, optional): The action taken in response to the event. Ex: alert, disable, enable.
                 Default is None.

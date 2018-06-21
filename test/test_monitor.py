@@ -64,8 +64,7 @@ def monitor(notify_config, ses_service, cloudwatch_service, slack_service):
 
 @pytest.fixture
 def target_datetime():
-    dt = datetime(2018, 1, 1, 0, 0, 0, 0)
-    dt.replace(tzinfo=timezone.utc)
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0).astimezone(timezone.utc)
     return dt
 
 
@@ -76,15 +75,13 @@ def iso8601_datetime(target_datetime):
 
 @pytest.fixture
 def start_datetime():
-    dt = datetime(2018, 6, 17, 1, 41, 25, 787402)
-    dt.replace(tzinfo=timezone.utc)
+    dt = datetime(2018, 6, 17, 1, 41, 25, 787402).astimezone(timezone.utc)
     return dt
 
 
 @pytest.fixture
 def end_datetime():
-    dt = datetime(2018, 6, 17, 2, 11, 25, 787402)
-    dt.replace(tzinfo=timezone.utc)
+    dt = datetime(2018, 6, 17, 2, 11, 25, 787402).astimezone(timezone.utc)
     return dt
 
 
@@ -229,12 +226,12 @@ def test_handle_ses_sending_quota_critical(monitor, target_datetime):
                 'utilization': '150%',
                 'threshold': '90%',
                 'aws_region': 'undefined',
-                'ts': '2018-01-01T00:00:00',
+                'ts': '2018-01-01T08:00:00+00:00',
                 'aws_environment': 'undefined'},
             'source': 'undefined-undefined-undefined-ses-account-monitor',
             'group': 'aws-undefined',
             'severity': 'critical',
-            'timestamp': '2018-01-01T00:00:00',
+            'timestamp': '2018-01-01T08:00:00+00:00',
             'component': 'ses',
             'class': 'ses_account_sending_quota',
             'summary': 'SES account sending quota is at capacity.'}}
@@ -281,7 +278,7 @@ def test_handle_ses_sending_quota_warning(monitor, target_datetime):
                          'title': 'Status',
                          'value': 'WARNING'},
                         {'title': 'Time (UTC)',
-                         'value': '2018-01-01T00:00:00'},
+                         'value': '2018-01-01T08:00:00+00:00'},
                         {'short': True,
                          'title': 'Utilization',
                          'value': '80.00%'},
@@ -353,17 +350,17 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
                                                                       'aws_region': 'undefined',
                                                                       'bounce_rate': '5.00%',
                                                                       'bounce_rate_threshold': '5.00%',
-                                                                      'bounce_rate_timestamp': '2018-06-17T02:11:25.787402',
+                                                                      'bounce_rate_timestamp': '2018-06-17T09:11:25.787402+00:00',
                                                                       'complaint_rate': '99.00%',
                                                                       'complaint_rate_threshold': '0.04%',
-                                                                      'complaint_rate_timestamp': '2018-06-17T02:11:25.787402',
+                                                                      'complaint_rate_timestamp': '2018-06-17T09:11:25.787402+00:00',
                                                                       'ts': '1529226685',
                                                                       'version': 'v1.2018.06.18'},
                                                    'group': 'aws-undefined',
                                                    'severity': 'critical',
                                                    'source': 'undefined-undefined-undefined-ses-account-monitor',
                                                    'summary': 'SES account reputation is at dangerous levels.',
-                                                   'timestamp': '2018-06-17T02:11:25.787402'},
+                                                   'timestamp': '2018-06-17T09:11:25.787402+00:00'},
                                        'routing_key': None}
 
     assert len(result['slack']) == 1
@@ -394,13 +391,13 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
                          'value': '99.00% / 0.04%'},
                         {'short': True,
                          'title': 'Complaint Rate Time',
-                         'value': '2018-06-17T02:11:25.787402'},
+                         'value': '2018-06-17T09:11:25.787402+00:00'},
                         {'short': True,
                          'title': 'Bounce Rate / Threshold',
                          'value': '5.00% / 5.00%'},
                         {'short': True,
                          'title': 'Bounce Rate Time',
-                         'value': '2018-06-17T02:11:25.787402'},
+                         'value': '2018-06-17T09:11:25.787402+00:00'},
                         {'short': False,
                          'title': 'Message',
                          'value': 'SES account reputation has breached the CRITICAL threshold.'}],
@@ -451,7 +448,7 @@ def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_result
                   'value': '5.40% / 5.00%'},
                  {'short': True,
                   'title': 'Bounce Rate Time',
-                  'value': '2018-06-17T02:11:25.787402'},
+                  'value': '2018-06-17T09:11:25.787402+00:00'},
                  {'short': False,
                   'title': 'Message',
                   'value': 'SES account reputation has breached the WARNING threshold.'}],
