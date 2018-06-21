@@ -10,7 +10,7 @@ build:
 	mkdir -p build/src/ses_account_monitor
 	cd ses_account_monitor && cp --parents `find -name \*.py` ../build/src/ses_account_monitor
 	cp lambda_handler.py build/src
-	cd build/src && zip -r9 ../lambda-ses-account-monitor.zip .
+	cd build/src && zip -r9 ../lambda-ses-account-monitor.py.zip .
 
 clean:
 	rm -rf build

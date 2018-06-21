@@ -24,6 +24,10 @@ The SES account sending quota rates by default are set to 80% as the warning and
 
 The bounce rate should not exceed 10% and the complaint rate should not exceed 0.1%, or AWS will suspend the account. AWS recommended warnings (10% and 0.05%) are used as the default warning thresholds. The critical thresholds are set to be at around the ~80% of the suspension levels.
 
+## Requirements
+
+- Python 3.6
+
 ## Development
 
 ```shell
@@ -68,7 +72,7 @@ The version is saved to [.bumpversion.cfg](./.bumpversion.cfg).
 
 ## Deploying
 
-Download the package from [releases](https://github.com/mikechau/aws-lambda-ses-account-monitor/releases) or build it locally. The artifact path locally is at `build/lambda-ses-monitor-account.zip`.
+Download the package from [releases](https://github.com/mikechau/aws-lambda-ses-account-monitor/releases) or build it locally. The artifact path locally is at `build/lambda-ses-monitor-account.py.zip`.
 
 The handler is located at `lambda_handler.lambda_handler`.
 
