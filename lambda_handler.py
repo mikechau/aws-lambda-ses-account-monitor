@@ -34,7 +34,8 @@ def lambda_handler(event, context):
 
     logger.info(json_dump_request_event(class_name='lambda_handler',
                                         method_name='lambda_handler',
-                                        params=event))
+                                        params=event,
+                                        details='Lambda event received.'))
 
     monitor = Monitor(ses_client=ses_client,
                       cloudwatch_client=cloudwatch_client)
@@ -45,4 +46,5 @@ def lambda_handler(event, context):
 
     logger.info(json_dump_response_event(class_name='lambda_handler',
                                          method_name='lambda_handler',
-                                         response=response))
+                                         response=response,
+                                         details='Lambda event processed.'))
