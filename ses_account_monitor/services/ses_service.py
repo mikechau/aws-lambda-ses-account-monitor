@@ -65,7 +65,7 @@ class SesService(object):
                 Default is None, which will cause the current date to be used.
 
         Returns:
-            tuple:
+            tuple: Tuple containing the metric statistics.
                 volume (float): The total number of emails sent.
                 max_volume (float): The max number of emails allowed to be sent.
                 usage (float): Percentage of max_volume being utilized, 80% is represented as 80.
@@ -84,7 +84,7 @@ class SesService(object):
         Fetch the account sending quota from AWS.
 
         Returns:
-            dict:
+            dict: AWS SES sending quota response.
                 Max24HourSend (float): Max number of emails allowed to send in a 24 hour interval.
                 MaxSendRate (float): Max send rate.
                 SentLast24Hours (float): Emails sent in the last 24 hours.
@@ -130,7 +130,7 @@ class SesService(object):
                 Default is None, and assumes 100.
 
         Returns:
-            bool
+            bool: True if the account sending rate is over, False if not.
         '''
 
         if percent is None:
@@ -147,7 +147,7 @@ class SesService(object):
         Check if account sending is enabled.
 
         Returns:
-            bool
+            bool: True if account sending is enabled, False if disabled.
         '''
 
         return self.client.get_account_sending_enabled()['Enabled']
@@ -157,7 +157,7 @@ class SesService(object):
         Toggle account sending.
 
         Returns:
-            bool
+            bool: True is account sending is enabled, False if disabled.
         '''
 
         if self.is_account_sending_enabled():
@@ -174,7 +174,7 @@ class SesService(object):
         Enable account sending.
 
         Returns:
-            bool: True
+            bool: True, for when account sending is enabled.
         '''
 
         self._log_enable_account_sending_request()
@@ -190,7 +190,7 @@ class SesService(object):
         Disable account sending.
 
         Returns:
-            bool: False
+            bool: False, for when account sending is disabled.
         '''
 
         self._log_disable_account_sending_request()
@@ -245,7 +245,7 @@ class SesService(object):
             total (float/int): The total amount.
 
         Returns:
-            float
+            float: The utilization percentage.
         '''
 
         return ((current / total) * 100.0)

@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+
+'''
+ses_account_monitor.monitor
+~~~~~~~~~~~~~~~~
+
+SES account monitor monitor module.
+'''
+
 import logging
 
 from ses_account_monitor.services import (
@@ -37,13 +45,19 @@ THRESHOLDS = {
 
 
 class NotificationFailure(Exception):
+    '''
+    Custom exception for notification failures, inherits Exception.
+    '''
     pass
 
 
 class Monitor(object):
+    '''
+    Monitor classs, retrieves SES metric data and if past set thresholds will send alerts to connected notification services.
+    '''
+
     def __init__(self,
                  ses_management_strategy=None,
-                 aws_config=None,
                  notify_config=False,
                  thresholds=None,
                  cloudwatch_service=None,
@@ -53,8 +67,29 @@ class Monitor(object):
                  monitor_ses_reputation=MONITOR_SES_REPUTATION,
                  monitor_ses_sending_quota=MONITOR_SES_SENDING_QUOTA,
                  logger=None):
+        '''
+        Args:
+            ses_management_strategy (:obj:`str`, optional): SES management strategy, whether to alert only or managed SES (autopause).
+                Default is None, which will use alert. Ex: managed, alert.
+            notify_config (:obj:`NotifyConfig`, optional): The notification configuration.
+                Default is None, which will use the configuration specified in the config module.
+            thresholds (:obj:`dict`, optional): The threshold configuration.
+                Default is None, which will use the configuration specified in the config module.
+            cloudwatch_service (:obj:`botocore.client.CloudWatch`, optional): CloudWatch service instance.
+                Default is None, which will create instance using configuration settings from the config module.
+            ses_service (:obj:`botocore.client.SES`, optional): SES service instance.
+                Default is None, which will create instance using configuration settings from the config module.
+            slack_service (:obj:`SlackService`, optional): Slack service instance.
+                Default is None, which will create instance using configuration settings from the config module.
+            pager_duty_service (:obj:`PagerDutyService`, optional): PagerDuty service instance.
+            monitor_ses_reputation (:obj:`bool`, optional): Flag for enabling SES account reputation monitoring.
+            monitor_ses_sending_quota (:obj:`bool`, optional): Flag for enabling SES account sending quota monitoring.
+            logger (:obj:`logging.Logger`, optional): Logger instance. Defaults to None, which will create a logger instance.
+        '''
+
         self._notify_config = (notify_config or NOTIFY_CONFIG)
         self._thresholds = (thresholds or THRESHOLDS)
+        self._logger = (logger or self._build_logger())
 
         self.monitor_ses_reputation = monitor_ses_reputation
         self.monitor_ses_sending_quota = monitor_ses_sending_quota
@@ -64,25 +99,53 @@ class Monitor(object):
         self.pager_duty_service = (pager_duty_service or PagerDutyService())
         self.slack_service = (slack_service or SlackService())
 
-        self._set_logger(logger)
-
     @property
     def ses_sending_quota_warning_percent(self):
+        '''
+        float: SES sending quota WARNING percentage.
+        '''
         return self._thresholds['ses_sending_quota_warning_percent']
 
     @property
     def ses_sending_quota_critical_percent(self):
+        '''
+        float: SES sending quota CRITICAL percentage.
+        '''
         return self._thresholds['ses_sending_quota_critical_percent']
 
     @property
     def logger(self):
+        '''
+        obj (logger.Logger): The logger instance.
+        '''
         return self._logger
 
     @property
     def notify_config(self):
+        '''
+        obj (NotifyConfig): The notify config instance.
+        '''
         return self._notify_config
 
     def send_notifications(self, raise_on_errors=False):
+        '''
+        Send all notifications.
+
+        Args:
+            raise_on_errors (:obj:`bool`, optional): Flag to raise exceptions on notification failures.
+                A NotificationFailure exception is raised when notification HTTP responses return status codes in the 4XX-5XX range.
+                Default is set to False.
+
+        Returns:
+            dict: Object containing the notification responses from PagerDuty and Slack.
+                pager_duty (:obj:`list` of :obj:`tuple`): List of tuples containing the event id and response.
+                    event_id (str): PagerDuty event id.
+                    response (requests.Response/dict): Response object. If a dry run was executed will be a dict of the request params.
+                slack (:obj:`list` of :obj:`tuple`): List of tuples containing the channel and response.
+                    channel (str): Slack channel.
+                    response (requests.Response/dict): Response object. If a dry run was executed will be a dict of the request params.
+        '''
+
         self.logger.debug('Sending notifications...')
         self.pager_duty_service.send_notifications()
         self.slack_service.send_notifications()
@@ -94,6 +157,18 @@ class Monitor(object):
         return self._get_notification_responses()
 
     def handle_ses_sending_quota(self, target_datetime=None):
+        '''
+        Reviews the SES sending quota and enqueues notifications if thresholds have been exceeded.
+
+        Args:
+            target_datetime (datetime.datetime): Datetime object. Default is None, if not set will use the current datetime.
+
+        Returns:
+            dict: Queued notifications for PagerDuty and Slack.
+                pager_duty (collections.deque): Pager Duty events queue.
+                slack (collections.deque): Slack messages queue.
+        '''
+
         if not self.monitor_ses_sending_quota:
             self.logger.debug('Handling SES account sending quota is DISABLED, skipping...')
             return
@@ -135,6 +210,18 @@ class Monitor(object):
         return self._get_pending_notifications()
 
     def handle_ses_reputation(self, target_datetime=None, period=None, metric_timedelta=None):
+        '''
+        Reviews the SES account reputation and enqueues notifications if thresholds have been exceeded.
+
+        Args:
+            target_datetime (datetime.datetime): Datetime object. Default is None, if not set will use the current datetime.
+
+        Returns:
+            dict: Queued notifications for PagerDuty and Slack.
+                pager_duty (collections.deque): Pager Duty events queue.
+                slack (collections.deque): Slack messages queue.
+        '''
+
         if not self.monitor_ses_reputation:
             self.logger.debug('Handling SES reputation is DISABLED, skipping...')
             return
@@ -166,20 +253,47 @@ class Monitor(object):
 
         return self._get_pending_notifications()
 
-    def _set_logger(self, logger):
-        if logger:
-            self._logger = logger
-        else:
-            self._logger = logging.getLogger(self.__module__)
-            self._logger.addHandler(logging.NullHandler())
+    def _build_logger(self):
+        '''
+        Builds a logger instance.
+
+        Returns:
+            obj (logging.Logger): The Logger instance.
+        '''
+
+        logger = logging.getLogger(self.__module__)
+        logger.addHandler(logging.NullHandler())
+        return logger
 
     def _get_pending_notifications(self):
+        '''
+        Gets the notification queues for PagerDuty and Slack.
+
+        Returns:
+            dict: Queued notifications for PagerDuty and Slack.
+                pager_duty (collections.deque): Pager Duty events queue.
+                slack (collections.deque): Slack messages queue.
+        '''
+
         return {
             'slack': self.slack_service.messages,
             'pager_duty': self.pager_duty_service.events
         }
 
     def _get_notification_responses(self):
+        '''
+        Gets the notification queues for PagerDuty and Slack.
+
+        Returns:
+            dict: Object containing the notification responses from PagerDuty and Slack.
+                pager_duty (:obj:`list` of :obj:`tuple`): List of tuples containing the event id and response.
+                    event_id (str): PagerDuty event id.
+                    response (requests.Response/dict): Response object. If a dry run was executed will be a dict of the request params.
+                slack (:obj:`list` of :obj:`tuple`): List of tuples containing the channel and response.
+                    channel (str): Slack channel.
+                    response (requests.Response/dict): Response object. If a dry run was executed will be a dict of the request params.
+        '''
+
         return {
             'slack': self.slack_service.responses,
             'pager_duty': self.pager_duty_service.responses
@@ -193,6 +307,21 @@ class Monitor(object):
                                            metric_iso_ts,
                                            event_iso_ts=None,
                                            event_unix_ts=None):
+        '''
+        Actions taken when SES sending quota is in a CRITICAL state.
+
+        Args:
+            utilization_percent (float/int): Utilization percentage. 80% is 80.
+            critical_percent (float/int): Critical threshold percentage. 80% is 80.
+            volume (float/int): Number of emails sent.
+            max_volume (float/int): Max number of emails allowed to be sent.
+            metric_iso_ts (str): ISO 8601 timestamp.
+            event_iso_ts (:obj:`str`, optional): ISO 8601 timestamp.
+                Default is None, if not set will use current time.
+            event_unix_ts (:obj:`str/int`, optional): UNIX timestamp.
+                Default is None, if not set will use current time.
+        '''
+
         self.logger.debug('SES sending quota is in a CRITICAL state!')
         self._log_handle_ses_quota_request(utilization_percent, critical_percent, 'CRITICAL')
 
@@ -229,6 +358,21 @@ class Monitor(object):
                                           max_volume,
                                           metric_iso_ts,
                                           event_unix_ts=None):
+        '''
+        Actions taken when SES sending quota is in a WARNING state.
+
+        Args:
+            utilization_percent (float/int): Utilization percentage. 80% is 80.
+            warning_percent (float/int): Warning threshold percentage. 80% is 80.
+            volume (float/int): Number of emails sent.
+            max_volume (float/int): Max number of emails allowed to be sent.
+            metric_iso_ts (str): ISO 8601 timestamp.
+            event_unix_ts (:obj:`str/int`, optional): UNIX timestamp.
+                Default is None, if not set will use current time.
+            event_iso_ts (:obj:`str`, optional): ISO 8601 timestamp.
+                Default is None, if not set will use current time.
+        '''
+
         self.logger.debug('SES sending quota is in a WARNING state!')
 
         self._log_handle_ses_quota_request(utilization_percent, warning_percent, 'WARNING')
@@ -255,6 +399,14 @@ class Monitor(object):
         self._log_handle_ses_quota_response()
 
     def _handle_ses_sending_quota_ok(self, utilization_percent, warning_percent):
+        '''
+        Actions taken when SES sending quota is in a OK state.
+
+        Args:
+            utilization_percent (float/int): Utilization percentage. 80% is 80.
+            warning_percent (float/int): Warning threshold percentage. 80% is 80.
+        '''
+
         self.logger.debug('SES sending quota is in a OK state!')
 
         self._log_handle_ses_quota_request(utilization_percent, warning_percent, 'OK')
@@ -268,6 +420,17 @@ class Monitor(object):
         self._log_handle_ses_quota_response()
 
     def _handle_ses_reputation_critical(self, metrics, event_iso_ts=None, event_unix_ts=None):
+        '''
+        Actions taken when SES account reputation is in a CRITICAL state.
+
+        Args:
+            metrics (:obj:`list` of :obj:`tuple`): List of tuples containing the metrics.
+            event_unix_ts (:obj:`str`, optional): UNIX timestamp of when the event occurred.
+                Default is None, which will cause the current time to be used.
+            event_iso_ts (:obj:`str`, optional): ISO 8601 timestamp of when the event occurred.
+                Default is None, which will cause the current time to be used.
+        '''
+
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_CRITICAL)
 
         self._log_handle_ses_reputation_request(metrics=metrics,
@@ -305,6 +468,15 @@ class Monitor(object):
         self._log_handle_ses_reputation_response()
 
     def _handle_ses_reputation_warning(self, metrics, event_unix_ts=None):
+        '''
+        Actions taken when SES account reputation is in a WARNING state.
+
+        Args:
+            metrics (:obj:`list` of :obj:`tuple`): List of tuples containing the metrics.
+            event_unix_ts (:obj:`str`, optional): UNIX timestamp of when the event occurred.
+                Default is None, which will cause the current time to be used.
+        '''
+
         action = ACTION_ALERT
 
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_WARNING)
@@ -336,6 +508,15 @@ class Monitor(object):
         self._log_handle_ses_reputation_response()
 
     def _handle_ses_reputation_ok(self, metrics, event_unix_ts=None):
+        '''
+        Actions taken when SES account reputation is in a CRITICAL state.
+
+        Args:
+            metrics (:obj:`list` of :obj:`tuple`): List of tuples containing the metrics.
+            event_unix_ts (:obj:`str`, optional): UNIX timestamp of when the event occurred.
+                Default is None, which will cause the current time to be used.
+        '''
+
         self.logger.debug('SES account reputation has metrics in a %s state!', THRESHOLD_OK)
 
         self._log_handle_ses_reputation_request(metrics=metrics,
@@ -364,6 +545,10 @@ class Monitor(object):
         self._log_handle_ses_reputation_response()
 
     def _handle_notification_responses(self):
+        '''
+        Review notification responses returned 4XX-5XX responses.
+        '''
+
         for eid, r in self.pager_duty_service.responses:
             if (r.status_code >= 400) and (r.status_code <= 500):
                 self.logger.debug('PagerDuty notification FAILURE for event: %s, received: %s.', eid, r.status_code)
