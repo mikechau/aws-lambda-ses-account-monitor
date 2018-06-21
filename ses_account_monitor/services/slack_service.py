@@ -45,6 +45,7 @@ def get_color(threshold_name):
 
     return THRESHOLD_COLOR.get(threshold_name.upper(), '')
 
+
 def build_ses_reputation_text(threshold_name):
     '''
     Generate the SES reputation text, returns the fallback text and primary text.
