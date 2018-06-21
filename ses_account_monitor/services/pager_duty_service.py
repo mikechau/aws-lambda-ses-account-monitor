@@ -131,7 +131,7 @@ class PagerDutyService(HttpClient):
 
     def enqueue_ses_account_sending_quota_trigger_event(self, *args, **kwargs):
         '''
-        Create a SES account sending quota trigger event and add it to the event queue.
+        Adds a SES account sending quota trigger event to the event queue.
 
         This event is a TRIGGER and it should be sent when the emails sent in a 24 hour exceed the 24 hour limit.
 
@@ -140,7 +140,7 @@ class PagerDutyService(HttpClient):
             max_volume (int): The max number of SES emails allowed for the 24 hour period.
             utiliziation_percent (float): The percent of the quota used. Ex: 80% is represented as 80.
             threshold_percent (float): The threshold percent. Ex: 80% is represented as 80.
-            event_iso_ts (:obj:`str`, optional): String formatted ISO 8601 timestamp.
+            event_iso_ts (:obj:`str`, optional): ISO 8601 timestamp.
                 Default is None, which will cause the current time to be used.
             metric_ts (:obj:`str/int/datetime.datetime`, optional): The metric timestamp in any format.
                 Default is None, which will cause the current time to be used.
@@ -155,7 +155,7 @@ class PagerDutyService(HttpClient):
 
     def enqueue_ses_account_sending_quota_resolve_event(self, *args, **kwargs):
         '''
-        Create a SES account sending quota resolve event and add it to the event queue.
+        Adds a SES account sending quota resolve event to the event queue.
 
         This event is a RESOLVE, should be sent when emails sent in a 24 hour period are within the quota.
 
@@ -169,13 +169,13 @@ class PagerDutyService(HttpClient):
 
     def enqueue_ses_account_reputation_trigger_event(self, *args, **kwargs):
         '''
-        Create a SES account sending reputation trigger event and add it to the event queue.
+        Adds a SES account sending reputation trigger event to the event queue.
 
         This event is a TRIGGER and it should be sent when the account reputation exceeds thresholds.
 
         Args:
             metrics (:obj:`list` of :obj:`tuple`): List of tuples containing the metrics.
-            event_iso_ts (:obj:`str`, optional): String formatted ISO 8601 timestamp of when the event occurred.
+            event_iso_ts (:obj:`str`, optional): ISO 8601 timestamp of when the event occurred.
                 Default is None, which will cause the current time to be used.
             event_unix_ts (:obj:`str`, optional): UNIX timestamp of when the event occurred.
                 Default is None, which will cause the current time to be used.
@@ -192,7 +192,7 @@ class PagerDutyService(HttpClient):
 
     def enqueue_ses_account_reputation_resolve_event(self, *args, **kwargs):
         '''
-        Create a SES account sending reputation resolve event and add it to the event queue.
+        Adds a SES account sending reputation resolve event to the event queue.
 
         This event is a RESOLVE, should be sent when reputation metrics are below thresholds.
 
@@ -219,13 +219,13 @@ class PagerDutyService(HttpClient):
             max_volume (int): The max number of SES emails allowed for the 24 hour period.
             utiliziation_percent (float): The percent of the quota used. Ex: 80% is represented as 80.
             threshold_percent (float): The threshold percent. Ex: 80% is represented as 80.
-            event_iso_ts (:obj:`str`, optional): String formatted ISO 8601 timestamp.
+            event_iso_ts (:obj:`str`, optional): ISO 8601 timestamp.
                 Default is None, which will cause the current time to be used.
             metric_ts (:obj:`str/int/datetime.datetime`, optional): The metric timestamp in any format.
                 Default is None, which will cause the current time to be used.
 
         Returns:
-            dict:
+            dict: The PagerDuty trigger event payload for SES account sending.
                 payload (dict):
                     summary (str): Event summary.
                     timestamp (str): Event timestamp.
@@ -265,7 +265,7 @@ class PagerDutyService(HttpClient):
 
         Args:
             metrics (:obj:`list` of :obj:`tuple`): List of tuples containing the metrics.
-            event_iso_ts (:obj:`str`, optional): String formatted ISO 8601 timestamp of when the event occurred.
+            event_iso_ts (:obj:`str`, optional): ISO 8601 timestamp of when the event occurred.
                 Default is None, which will cause the current time to be used.
             event_unix_ts (:obj:`int/str`, optional): UNIX timestamp of when the event occurred.
                 Default is None, which will cause the current time to be used.
@@ -273,7 +273,7 @@ class PagerDutyService(HttpClient):
                 Default is None.
 
         Returns:
-            dict:
+            dict: The PagerDuty trigger event payload for SES account reputation.
                 payload (dict):
                     summary (str): Event summary.
                     timestamp (str): Event timestamp.
@@ -306,7 +306,7 @@ class PagerDutyService(HttpClient):
         Generates a RESOLVE event payload, when the SES account sending amount is within the quota.
 
         Returns:
-            dict:
+            dict: The PagerDuty resolve event payload for SES account sending.
                 routing_key (str): PagerDuty routing key.
                 dedup_key (str): PagerDuty dedup key.
                 event_action (str): PagerDuty event action.
@@ -319,7 +319,7 @@ class PagerDutyService(HttpClient):
         Generates a RESOLVE event payload, when the SES account reputation is below thresholds.
 
         Returns:
-            dict:
+            dict: The PagerDuty resolve event payload for SES account reputation.
                 routing_key (str): PagerDuty routing key.
                 dedup_key (str): PagerDuty dedup key.
                 event_action (str): PagerDuty event action.
@@ -350,7 +350,7 @@ class PagerDutyService(HttpClient):
             client_url (:obj:`str`, optional): Client url.
 
         Returns:
-            dict:
+            dict: The PagerDuty trigger event payload.
                 payload (dict):
                     summary (str): Event summary.
                     timestamp (str): Event timestamp.
@@ -387,13 +387,13 @@ class PagerDutyService(HttpClient):
 
     def _build_resolve_payload(self, class_type):
         '''
-        Generates a TRIGGER event payload.
+        Generates a RESOLVE event payload.
 
         Args:
             class_type (str): PagerDuty event class.
 
         Returns:
-            dict:
+            dict: The PagerDuty resolve event payload.
                 routing_key (str): PagerDuty routing key.
                 dedup_key (str): PagerDuty dedup key.
                 event_action (str): PagerDuty event action.
@@ -418,7 +418,7 @@ class PagerDutyService(HttpClient):
                 Default is None, which will cause the current time to be used.
 
         Returns:
-            dict:
+            dict: SES account quota custom details object to be sent with the PagerDuty trigger event payload.
                 aws_account_name (str): AWS account name.
                 aws_region (str): AWS region.
                 aws_environment (str): AWS environment.
@@ -454,7 +454,7 @@ class PagerDutyService(HttpClient):
                 Default is None, which will cause the current time to be used.
 
         Returns:
-            dict:
+            dict: SES account reputation custom details object to be sent with the PagerDuty trigger event payload.
                 aws_account_name (str): AWS account name.
                 aws_region (str): AWS region.
                 aws_environment (str): AWS environment.

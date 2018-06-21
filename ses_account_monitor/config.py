@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+
+'''
+ses_account_monitor.config
+~~~~~~~~~~~~~~~~
+
+SES account monitor config module.
+'''
+
 import os
 
 from distutils.util import strtobool
