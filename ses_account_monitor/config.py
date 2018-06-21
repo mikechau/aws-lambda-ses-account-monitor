@@ -97,7 +97,7 @@ SES_THRESHOLDS = {
 }
 
 # SLACK CONSTANTS
-SLACK_CHANNELS = filter(None, os.getenv('SLACK_CHANNELS', '').split(','))
+SLACK_CHANNELS = list(filter(None, os.getenv('SLACK_CHANNELS', '').split(',')))
 SLACK_FOOTER_ICON_URL = os.getenv('SLACK_FOOTER_ICON_URL', 'https://platform.slack-edge.com/img/default_application_icon.png')
 SLACK_ICON_EMOJI = os.getenv('SLACK_ICON_EMOJI', None)
 SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', None)
