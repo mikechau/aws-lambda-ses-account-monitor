@@ -1,0 +1,15 @@
+[paths]
+source =
+   ses_account_monitor
+
+[run]
+branch = true
+source =
+    ses_account_monitor
+    test
+parallel = true
+
+[report]
+show_missing = false
+precision = 2
+omit = *migrations*
