@@ -26,6 +26,23 @@ pytest
 make
 ```
 
+## Versioning
+
+```
+# Bump version major
+make major
+
+# Bump version minor
+make minor
+
+# Bump version patch
+make patch
+```
+
+A commit incrementing the version will be created as well as the version tag.
+
+The version is saved to [.bumpversion.cfg](./.bumpversion.cfg).
+
 ## Deploying
 
 Download the package from [releases](https://github.com/mikechau/aws-lambda-ses-account-monitor/releases) or build it locally. The artifact path locally is at `build/lambda-ses-monitor-account.zip`.
