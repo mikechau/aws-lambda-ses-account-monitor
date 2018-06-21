@@ -46,7 +46,7 @@ def ses_quota_responses():
 
 @pytest.fixture
 def datetime_utc():
-    dt = datetime(2018, 1, 1, 0, 0, 0, 0).astimezone(timezone.utc)
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
     return dt
 
 
@@ -198,4 +198,4 @@ def test_get_account_sending_stats(client, service, iso8601_date):
     with stubber:
         result = service.get_account_sending_stats(event_iso_ts=iso8601_date)
 
-        assert result == (10.0, 50.0, 20.0, '2018-01-01T08:00:00+00:00')
+        assert result == (10.0, 50.0, 20.0, '2018-01-01T00:00:00+00:00')

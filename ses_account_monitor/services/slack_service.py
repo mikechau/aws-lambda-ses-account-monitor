@@ -226,7 +226,7 @@ class SlackService(HttpClient):
                         'short': True
                     },
                     {
-                        'title': 'Time (UTC)',
+                        'title': 'Time',
                         'value': (metric_iso_ts or iso8601_timestamp())
                     },
                     {

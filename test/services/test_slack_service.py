@@ -39,8 +39,8 @@ def ses_account_sending_quota_payload():
                                         {'short': True,
                                          'title': 'Status',
                                          'value': 'CRITICAL'},
-                                        {'title': 'Time (UTC)',
-                                         'value': '2018-01-01T08:00:00+00:00'},
+                                        {'title': 'Time',
+                                         'value': '2018-01-01T00:00:00+00:00'},
                                         {'short': True,
                                          'title': 'Utilization',
                                          'value': '100.00%'},
@@ -91,13 +91,13 @@ def ses_account_reputation_payload():
                      'value': '1.00% / 100.00%'},
                     {'short': True,
                      'title': 'Bounce Rate Time',
-                     'value': '2018-01-01 08:00:00+00:00'},
+                     'value': '2018-01-01T00:00:00+00:00'},
                     {'short': True,
                      'title': 'Complaint Rate / Threshold',
                      'value': '1.00% / 100.00%'},
                     {'short': True,
                      'title': 'Complaint Rate Time',
-                     'value': '2018-01-01 08:00:00+00:00'},
+                     'value': '2018-01-01T00:00:00+00:00'},
                     {'short': False,
                      'title': 'Message',
                      'value': 'SES account reputation has breached the CRITICAL threshold.'}],
@@ -126,25 +126,25 @@ def test_post_message(service, webhook_url):
 
 
 @pytest.fixture
-def datetime_utc():
-    dt = datetime(2018, 1, 1, 0, 0, 0, 0).astimezone(timezone.utc)
+def iso8601_timestamp():
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc).isoformat()
     return dt
 
 
 @pytest.fixture
-def metrics(datetime_utc):
-    return [('Bounce Rate', 1, 100, datetime_utc),
-            ('Complaint Rate', 1, 100, datetime_utc)]
+def metrics(iso8601_timestamp):
+    return [('Bounce Rate', 1, 100, iso8601_timestamp),
+            ('Complaint Rate', 1, 100, iso8601_timestamp)]
 
 
-def test_build_ses_account_sending_quota_payload(service, ses_account_sending_quota_payload, datetime_utc):
+def test_build_ses_account_sending_quota_payload(service, ses_account_sending_quota_payload, iso8601_timestamp):
     result = service.build_ses_account_sending_quota_payload(threshold_name='CRITICAL',
                                                              utilization_percent=100,
                                                              threshold_percent=90,
                                                              volume=9000,
                                                              max_volume=9000,
                                                              event_unix_ts=123456789,
-                                                             metric_iso_ts=datetime_utc.isoformat())
+                                                             metric_iso_ts=iso8601_timestamp)
 
     assert result == ses_account_sending_quota_payload
 
