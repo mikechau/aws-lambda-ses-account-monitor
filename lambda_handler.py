@@ -39,7 +39,8 @@ def lambda_handler(event, context):
                                             'message': 'Lambda event received.'}))
 
     monitor = Monitor(ses_client=ses_client,
-                      cloudwatch_client=cloudwatch_client)
+                      cloudwatch_client=cloudwatch_client,
+                      logger=logger)
     monitor.handle_ses_sending_quota()
     monitor.handle_ses_reputation()
 

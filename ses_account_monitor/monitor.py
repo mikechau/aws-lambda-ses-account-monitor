@@ -102,8 +102,8 @@ class Monitor(object):
         self.ses_management_strategy = (ses_management_strategy or SES_MONITOR_STRATEGY)
         self.ses_service = (ses_service or SesService(client=ses_client))
         self.cloudwatch_service = (cloudwatch_service or CloudWatchService(client=cloudwatch_client))
-        self.pager_duty_service = (pager_duty_service or PagerDutyService())
-        self.slack_service = (slack_service or SlackService())
+        self.pager_duty_service = (pager_duty_service or PagerDutyService(logger=logger))
+        self.slack_service = (slack_service or SlackService(logger=logger))
 
     @property
     def ses_sending_quota_warning_percent(self):
