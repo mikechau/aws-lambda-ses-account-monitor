@@ -1,0 +1,29 @@
+language: python
+python:
+- '2.7'
+sudo: false
+cache: pip
+env:
+  global:
+  - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
+  - SEGFAULT_SIGNALS=all
+before_install:
+- python --version
+- uname -a
+- lsb_release -a
+install:
+- pip install -r requirements-dev.txt
+script:
+- make
+notifications:
+  email:
+    on_success: never
+    on_failure: always
+deploy:
+  provider: releases
+  api_key:
+    secure: gfwDY/2ahiqzLFotfvbCov118v2gaRz2HKeps7HOcgTOwF3l52DhOLDJuP7GKZ9sqylu3AnBPACZpwkHF2d8bShOHd/mWvsRO3lJ5UvzFA8slDJRaDgsGUhJyzHKYQpAnX1dIbAp0wWczgytryipLAIj4/vS/giuIXM5pG9TDy/iU43gr4bzqoxNaRhgi5Qe4agPQmVQBqOV3rxo0nfVn4A6uNu6fSkeWZT1w8WIW7+DHlW1m32Fy5Vd1V11KeFncoPAiyb2Uvi7YcjQ1ZRgkxqpYHe1ZTXa+uFXxU2or4aN6lj8e8y5m2yf4cCv04cSbPBQ5k7RT7qSPEmAW3Iz3g8U0nIJYBf703/toKM2eIM+N5HzzYD2XKzRDAm7v9+vBCoJSK/nSsw+bzI9hay/SWtz4rtzQVlFwStDSh/xcJCy5LmXavvH1RH1rApsXKS7ADTizmQMHHZY0abIoh0lg6O1vmcSZrLtITSKA+P2mOdwxN3t2OFcPNUarGqPFOLhFx9NZPszDulcaO9QiUZXdEGgOoCIVhDcDdVEL8GhmI/+zPtbgwKHOr/18hpQu0hNG1fRq4spuCdR4I+xj0DM/CHANRsP/1oUPzmSr35tlTbp7VEI4JNOzR4SLTKDYZDgZCtByuWbYRtAstCgw0xHVaivcp4CDy/5KVokprudG/8=
+  file: build/lambda-ses-account-monitor.zip
+  skip_cleanup: true
+  on:
+    tags: true

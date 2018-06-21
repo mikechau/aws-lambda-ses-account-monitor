@@ -1,4 +1,4 @@
-.PHONY: lint clean major minor patch
+.PHONY: lint clean major minor patch test release master
 
 VERSION := $(shell egrep -o "([0-9]{1,}\.)+[0-9]{1,}" .bumpversion.cfg)
 
@@ -32,4 +32,4 @@ lint:
 	flake8 ses_account_monitor lambda_handler.py
 
 test:
-	pytest -vvv
+	pytest -vvv --cov=./ses_account_monitor
