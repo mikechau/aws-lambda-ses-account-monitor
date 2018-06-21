@@ -52,5 +52,6 @@ def iso8601_timestamp(dt=None):
     dt = (dt or datetime.utcnow())
     return dt.isoformat()
 
+
 def current_datetime():
     return datetime.utcnow()

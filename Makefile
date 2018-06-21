@@ -1,10 +1,10 @@
-.PHONY: clean major minor patch
+.PHONY: lint clean major minor patch
 
 VERSION := $(shell egrep -o "([0-9]{1,}\.)+[0-9]{1,}" .bumpversion.cfg)
 
 all: project
 
-project: clean
+project: clean lint test
 	mkdir -p build/src/ses_account_monitor
 	cd ses_account_monitor && cp --parents `find -name \*.py` ../build/src/ses_account_monitor
 	cp lambda_handler.py build/src
@@ -27,3 +27,9 @@ release: master
 
 master:
 	git push origin master
+
+lint:
+	flake8 ses_account_monitor lambda_handler.py
+
+test:
+	pytest -vvv
