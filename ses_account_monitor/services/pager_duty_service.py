@@ -9,7 +9,6 @@ PagerDuty service module.
 
 from __future__ import division
 
-from datetime import timezone
 from collections import deque
 
 from ses_account_monitor.clients.http_client import HttpClient
