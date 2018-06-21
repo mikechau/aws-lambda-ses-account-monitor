@@ -40,7 +40,7 @@ def ses_account_sending_quota_trigger_event_payload():
                         'severity': 'critical',
                         'source': 'undefined-undefined-undefined-ses-account-monitor',
                         'summary': 'SES account sending quota is at capacity.',
-                        'timestamp': '2018-01-01T08:00:00+00:00'},
+                        'timestamp': '2018-01-01T00:00:00+00:00'},
             'routing_key': '12345'}
 
 
@@ -59,17 +59,17 @@ def ses_account_reputation_trigger_event_payload():
                                            'aws_region': 'undefined',
                                            'bounce_rate': '1.00%',
                                            'bounce_rate_threshold': '1.00%',
-                                           'bounce_rate_timestamp': '2018-01-01T08:00:00+00:00',
+                                           'bounce_rate_timestamp': '2018-01-01T00:00:00+00:00',
                                            'complaint_rate': '1.00%',
                                            'complaint_rate_threshold': '1.00%',
-                                           'complaint_rate_timestamp': '2018-01-01T08:00:00+00:00',
+                                           'complaint_rate_timestamp': '2018-01-01T00:00:00+00:00',
                                            'ts': '123456789',
                                            'version': 'v1.2018.06.18'},
                         'group': 'aws-undefined',
                         'severity': 'critical',
                         'source': 'undefined-undefined-undefined-ses-account-monitor',
                         'summary': 'SES account reputation is at dangerous levels.',
-                        'timestamp': '2018-01-01T08:00:00+00:00'},
+                        'timestamp': '2018-01-01T00:00:00+00:00'},
             'routing_key': '12345'}
 
 
@@ -85,7 +85,7 @@ def build_resolve_event_payload():
 
 @pytest.fixture
 def datetime_utc():
-    dt = datetime(2018, 1, 1, 0, 0, 0, 0).astimezone(timezone.utc)
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
     return dt
 
 
