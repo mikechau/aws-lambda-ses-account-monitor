@@ -8,10 +8,10 @@ SES account monitor util module.
 '''
 
 import json
+
 from datetime import (
     datetime,
     timezone)
-from time import mktime
 
 
 class CustomJsonEncoder(json.JSONEncoder):
@@ -63,7 +63,7 @@ def json_dump_request_event(class_name, method_name, params=None, details=None):
     event = {
         'class_name': class_name,
         'method_name': method_name,
-        'timestamp': datetime.utcnow(),
+        'timestamp': iso8601_timestamp(),
         'event': 'request',
         'params': params,
         'details':  details
@@ -89,7 +89,7 @@ def json_dump_response_event(class_name, method_name, response=None, details=Non
     event = {
         'class_name': class_name,
         'method_name': method_name,
-        'timestamp': datetime.utcnow(),
+        'timestamp': iso8601_timestamp(),
         'event': 'response',
         'response': response,
         'details':  details
