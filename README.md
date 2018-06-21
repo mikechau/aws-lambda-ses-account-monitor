@@ -81,6 +81,7 @@ The handler is located at `lambda_handler.lambda_handler`.
 | LOG_LEVEL | `str` | INFO | WARNING | Log level. |
 | MONITOR_SES_REPUTATION | `bool` | `True` | `False` | Flag to monitor SES account reputation. |
 | MONITOR_SES_SENDING_QUOTA | `bool` | `True` | `False` | Flag to monitor SES account sending quota. |
+| NOTIFY_DRY_RUN | `bool` | `False` | `True` | Flag to enable notification dry runs, notifications will not be sent. |
 | NOTIFY_PAGER_DUTY_ON_SES_REPUTATION | `bool` | `False` | `True` | Flag to enable PagerDuty notifications when SES account reputation reaches thresholds. |
 | NOTIFY_PAGER_DUTY_ON_SES_SENDING_QUOTA | `bool` | `False` | `True` |Flag to enable PagerDuty notifications when SES account sending quota reaches thresholds. |
 | NOTIFY_SLACK_ON_SES_REPUTATION | `bool` | `False` | `True` | Flag to enable Slack notifications when SES account reputation reaches thresholds. |

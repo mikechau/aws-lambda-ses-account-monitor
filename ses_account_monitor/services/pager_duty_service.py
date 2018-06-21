@@ -16,6 +16,7 @@ from ses_account_monitor.clients.http_client import HttpClient
 from ses_account_monitor.config import (
     ACTION_ALERT,
     ACTION_DISABLE,
+    NOTIFY_DRY_RUN,
     PAGER_DUTY_SERVICE_CONFIG)
 
 from ses_account_monitor.util import (
@@ -49,7 +50,7 @@ class PagerDutyService(HttpClient):
         '''
 
         self._config = (config or PAGER_DUTY_SERVICE_CONFIG)
-        self._dry_run = dry_run
+        self._dry_run = (dry_run or NOTIFY_DRY_RUN)
 
         if routing_key is None:
             routing_key = self._config.routing_key

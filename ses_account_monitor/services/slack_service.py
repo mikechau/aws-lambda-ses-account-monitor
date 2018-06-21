@@ -15,6 +15,7 @@ from ses_account_monitor.clients.http_client import HttpClient
 
 from ses_account_monitor.config import (
     ACTION_ALERT,
+    NOTIFY_DRY_RUN,
     SLACK_SERVICE_CONFIG,
     THRESHOLD_CRITICAL,
     THRESHOLD_OK,
@@ -52,7 +53,7 @@ class SlackService(HttpClient):
         '''
 
         self._config = (config or SLACK_SERVICE_CONFIG)
-        self._dry_run = dry_run
+        self._dry_run = (dry_run or NOTIFY_DRY_RUN)
 
         if url is None:
             url = self._config.webhook_url
