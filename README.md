@@ -2,7 +2,27 @@
 
 [![codecov](https://travis-ci.org/mikechau/aws-lambda-ses-account-monitor.svg?branch=master)](https://travis-ci.org/mikechau/aws-lambda-ses-account-monitor) [![codecov](https://codecov.io/gh/mikechau/aws-lambda-ses-account-monitor/branch/master/graph/badge.svg)](https://codecov.io/gh/mikechau/aws-lambda-ses-account-monitor)
 
-AWS Lambda function for monitoring SES at the account level.
+AWS Lambda function for monitoring SES account metrics.
+
+The following metrics are monitored:
+- SES sending quota
+- SES account reputation (bounce rate and complaint rate)
+
+The following services to send notifications are supported:
+- Slack
+- PagerDuty
+
+The lambda should be set to run on a period of every 15 minutes.
+
+It will check to see if the SES account sending quota is at the thresholds, and if so queue up notification alerts.
+
+Then it will check the SES account reputation metrics. If they are at or exceed thresholds, if the `SES_MANAGEMENT_STRATEGY` of `manged` is set, then SES account sending will be disabled (paused), until the reputation is in a healthy state. After that notifications are queued up.
+
+Finally all the notifications are flushed and sent out. If any notifications fail to send, then a exception is thrown, to let AWS automatically retry the lambda.
+
+The SES account sending quota rates by default are set to 80% as the warning and 90% as the critical threshold.
+
+The bounce rate should not exceed 10% and the complaint rate should not exceed 0.1%, or AWS will suspend the account. AWS recommended warnings (10% and 0.05%) are used as the default warning thresholds. The critical thresholds are set to be at around the ~80% of the suspension levels.
 
 ## Development
 
