@@ -57,6 +57,9 @@ make minor
 
 # Bump version patch
 make patch
+
+# Push to GitHub
+make release
 ```
 
 A commit incrementing the version will be created as well as the version tag.
