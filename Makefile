@@ -25,13 +25,13 @@ build:
 clean:
 	rm -rf build
 
-major:
+major: lint test
 	bumpversion major
 
-minor:
+minor: lint test
 	bumpversion minor
 
-patch:
+patch: lint test
 	bumpversion patch
 
 release: master
