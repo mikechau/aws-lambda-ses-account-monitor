@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+from datetime import (
+  datetime,
+  timezone)
 
 import pytest
 import responses
@@ -82,14 +84,21 @@ def build_resolve_event_payload():
 
 
 @pytest.fixture
-def iso8601_date():
-    return datetime(2018, 1, 1, 0, 0, 0, 0).isoformat()
+def datetime_utc():
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0)
+    dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 @pytest.fixture
-def metrics():
-    return [('Bounce Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0)),
-            ('Complaint Rate', 1, 1, datetime(2018, 1, 1, 0, 0, 0, 0))]
+def iso8601_date(datetime_utc):
+    return datetime_utc.isoformat()
+
+
+@pytest.fixture
+def metrics(datetime_utc):
+    return [('Bounce Rate', 1, 1, datetime_utc),
+            ('Complaint Rate', 1, 1, datetime_utc)]
 
 
 @responses.activate

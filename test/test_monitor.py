@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import deque
-from datetime import datetime
+from datetime import (
+    datetime,
+    timezone)
 
 import boto3
 import pytest
@@ -62,7 +64,9 @@ def monitor(notify_config, ses_service, cloudwatch_service, slack_service):
 
 @pytest.fixture
 def target_datetime():
-    return datetime(2018, 1, 1, 0, 0, 0, 0)
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0)
+    dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 @pytest.fixture
@@ -72,12 +76,16 @@ def iso8601_datetime(target_datetime):
 
 @pytest.fixture
 def start_datetime():
-    return datetime(2018, 6, 17, 1, 41, 25, 787402)
+    dt = datetime(2018, 6, 17, 1, 41, 25, 787402)
+    dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 @pytest.fixture
 def end_datetime():
-    return datetime(2018, 6, 17, 2, 11, 25, 787402)
+    dt = datetime(2018, 6, 17, 2, 11, 25, 787402)
+    dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 @pytest.fixture
