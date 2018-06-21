@@ -40,7 +40,7 @@ def ses_account_sending_quota_payload():
                                          'title': 'Status',
                                          'value': 'CRITICAL'},
                                         {'title': 'Time (UTC)',
-                                         'value': '2018-01-01T00:00:00'},
+                                         'value': '2018-01-01T08:00:00+00:00'},
                                         {'short': True,
                                          'title': 'Utilization',
                                          'value': '100.00%'},
@@ -91,13 +91,13 @@ def ses_account_reputation_payload():
                      'value': '1.00% / 100.00%'},
                     {'short': True,
                      'title': 'Bounce Rate Time',
-                     'value': '2018-01-01 00:00:00'},
+                     'value': '2018-01-01 08:00:00+00:00'},
                     {'short': True,
                      'title': 'Complaint Rate / Threshold',
                      'value': '1.00% / 100.00%'},
                     {'short': True,
                      'title': 'Complaint Rate Time',
-                     'value': '2018-01-01 00:00:00'},
+                     'value': '2018-01-01 08:00:00+00:00'},
                     {'short': False,
                      'title': 'Message',
                      'value': 'SES account reputation has breached the CRITICAL threshold.'}],
@@ -127,8 +127,7 @@ def test_post_message(service, webhook_url):
 
 @pytest.fixture
 def datetime_utc():
-    dt = datetime(2018, 1, 1, 0, 0, 0, 0)
-    dt.replace(tzinfo=timezone.utc)
+    dt = datetime(2018, 1, 1, 0, 0, 0, 0).astimezone(timezone.utc)
     return dt
 
 

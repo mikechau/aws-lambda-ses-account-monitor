@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+from datetime import (
+    datetime,
+    timezone)
 
 import boto3
 import pytest
@@ -23,12 +25,12 @@ def service(client):
 
 @pytest.fixture
 def start_datetime():
-    return datetime(2018, 6, 17, 1, 41, 25, 787402)
+    return datetime(2018, 6, 17, 1, 41, 25, 787402, tzinfo=timezone.utc)
 
 
 @pytest.fixture
 def end_datetime():
-    return datetime(2018, 6, 17, 2, 11, 25, 787402)
+    return datetime(2018, 6, 17, 2, 11, 25, 787402, tzinfo=timezone.utc)
 
 
 @pytest.fixture
@@ -137,9 +139,9 @@ def test_build_ses_account_reputation_metrics(service, build_metric_data_results
     metric_data_results = build_metric_data_results(0.05, 0.1)
     result = service.build_ses_account_reputation_metrics(metric_data_results)
 
-    assert result.critical == [('Complaint Rate', 10.0, 0.04, '2018-06-17T02:11:25.787402')]
+    assert result.critical == [('Complaint Rate', 10.0, 0.04, '2018-06-17T02:11:25.787402+00:00')]
     assert result.ok == []
-    assert result.warning == [('Bounce Rate', 5.0, 5.0, '2018-06-17T02:11:25.787402')]
+    assert result.warning == [('Bounce Rate', 5.0, 5.0, '2018-06-17T02:11:25.787402+00:00')]
 
 
 def test_get_ses_account_reputation_metrics(client,
@@ -156,6 +158,6 @@ def test_get_ses_account_reputation_metrics(client,
     with stubber:
         result = service.get_ses_account_reputation_metrics(target_datetime=end_datetime)
         assert result.critical == []
-        assert result.ok == [('Bounce Rate', 3.0, 5.0, '2018-06-17T02:11:25.787402'),
-                             ('Complaint Rate', 0.001, 0.01, '2018-06-17T02:11:25.787402')]
+        assert result.ok == [('Bounce Rate', 3.0, 5.0, '2018-06-17T02:11:25.787402+00:00'),
+                             ('Complaint Rate', 0.001, 0.01, '2018-06-17T02:11:25.787402+00:00')]
         assert result.warning == []

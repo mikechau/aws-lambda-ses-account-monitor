@@ -34,4 +34,4 @@ lint:
 	flake8 ses_account_monitor lambda_handler.py
 
 test:
-	pytest -vvv --cov=./ses_account_monitor
+	pytest -vv --cov=./ses_account_monitor
