@@ -96,7 +96,7 @@ def metric_data_results_response_critical(end_datetime):
                     end_datetime,
                 ],
                 'Values': [
-                    0.05
+                    5.0
                 ],
                 'StatusCode': 'Complete',
             },
@@ -107,7 +107,7 @@ def metric_data_results_response_critical(end_datetime):
                     end_datetime
                 ],
                 'Values': [
-                    0.99
+                    99.0
                 ]
             }
         ],
@@ -126,7 +126,7 @@ def metric_data_results_response_warning(end_datetime):
                     end_datetime,
                 ],
                 'Values': [
-                    0.054
+                    5.23994
                 ],
                 'StatusCode': 'Complete',
             },
@@ -445,7 +445,7 @@ def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_result
                   'value': 'ALERT'},
                  {'short': True,
                   'title': 'Bounce Rate / Threshold',
-                  'value': '5.40% / 5.00%'},
+                  'value': '5.24% / 5.00%'},
                  {'short': True,
                   'title': 'Bounce Rate Time',
                   'value': '2018-06-17T02:11:25.787402+00:00'},

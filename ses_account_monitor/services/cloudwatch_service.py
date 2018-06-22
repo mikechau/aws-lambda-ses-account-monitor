@@ -94,7 +94,7 @@ def get_last_metric(metric):
     last_index = metric['Timestamps'].index(last_ts)
     last_value = metric['Values'][last_index]
 
-    return (metric['Label'], last_value * 100.0, last_ts.astimezone(timezone.utc).isoformat())
+    return (metric['Label'], last_value, last_ts.astimezone(timezone.utc).isoformat())
 
 
 class CloudWatchService(object):
