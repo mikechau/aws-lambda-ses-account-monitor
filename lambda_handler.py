@@ -32,6 +32,7 @@ def lambda_handler(event, context):
         context (LambdaContext): Lambda runtime information.
     '''
 
+    logger.debug('Lambda event received.')
     logger.info(json_dump_request_event(class_name='lambda_handler',
                                         method_name='lambda_handler',
                                         params=event,
@@ -46,6 +47,7 @@ def lambda_handler(event, context):
 
     response = monitor.send_notifications(raise_on_errors=True)
 
+    logger.debug('Lambda event processed.')
     logger.info(json_dump_response_event(class_name='lambda_handler',
                                          method_name='lambda_handler',
                                          response=response,
