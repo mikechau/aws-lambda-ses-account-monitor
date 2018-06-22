@@ -639,7 +639,10 @@ class Monitor(object):
         self.logger.info(
             json_dump_request_event(class_name=self.__class__.__name__,
                                     method_name='handle_ses_reputation',
-                                    details=metrics))
+                                    details={
+                                        'critical': metrics.critical,
+                                        'warning': metrics.warning,
+                                        'ok': metrics.ok}))
 
     def _log_handle_ses_reputation_response(self):
         '''
