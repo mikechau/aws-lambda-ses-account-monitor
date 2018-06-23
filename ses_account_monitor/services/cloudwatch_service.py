@@ -156,8 +156,10 @@ class CloudWatchService(object):
 
         Returns:
             list (tuple): Returns a list of tuples, representing the reputation metrics.
-
-                [(label, value, threshold, iso8601_timestamp), ...]
+                label (str): Name of the metric, taken from the CloudWatch metric results data label.
+                value (float): The value of the metric, will already be in percentage form.
+                threshold (float): The threshold percentage.
+                metric_ts (str): ISO 8601 timestamp.
         '''
 
         if metric_timedelta is None:
@@ -275,8 +277,10 @@ class CloudWatchService(object):
 
         Returns:
             list (tuple): Returns a list of tuples, representing the reputation metrics.
-
-                [(label, value, threshold, iso8601_timestamp), ...]
+                label (str): Name of the metric, taken from the CloudWatch metric results data label.
+                value (float): The value of the metric, will already be in percentage form.
+                threshold (float): The threshold percentage.
+                metric_ts (str): ISO 8601 timestamp.
         '''
 
         thresholds = self.ses_thresholds
