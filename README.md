@@ -1,6 +1,6 @@
 # aws-lambda-ses-account-monitor
 
-[![codecov](https://travis-ci.org/mikechau/aws-lambda-ses-account-monitor.svg?branch=master)](https://travis-ci.org/mikechau/aws-lambda-ses-account-monitor) [![codecov](https://codecov.io/gh/mikechau/aws-lambda-ses-account-monitor/branch/master/graph/badge.svg)](https://codecov.io/gh/mikechau/aws-lambda-ses-account-monitor)
+[![codecov](https://travis-ci.org/mikechau/aws-lambda-ses-account-monitor.svg?branch=master)](https://travis-ci.org/mikechau/aws-lambda-ses-account-monitor) [![codecov](https://codecov.io/gh/mikechau/aws-lambda-ses-account-monitor/branch/master/graph/badge.svg)](https://codecov.io/gh/mikechau/aws-lambda-ses-account-monitor) [![Maintainability](https://api.codeclimate.com/v1/badges/2b455b0bcd006affdaab/maintainability)](https://codeclimate.com/github/mikechau/aws-lambda-ses-account-monitor/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/2b455b0bcd006affdaab/test_coverage)](https://codeclimate.com/github/mikechau/aws-lambda-ses-account-monitor/test_coverage)
 
 AWS Lambda function for monitoring SES account metrics.
 
