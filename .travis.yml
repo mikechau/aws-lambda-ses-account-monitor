@@ -1,6 +1,6 @@
 language: python
 python:
-- '3.6'
+  - "3.6"
 sudo: false
 cache: pip
 env:
@@ -11,12 +11,16 @@ before_install:
   - python --version
   - uname -a
   - lsb_release -a
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 install:
   - pip install -r requirements-dev.txt
 script:
   - make
 after_success:
   - codecov
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 notifications:
   email:
     on_success: never
