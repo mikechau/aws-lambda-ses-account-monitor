@@ -212,8 +212,8 @@ def test_handle_ses_sending_quota_critical(monitor, target_datetime):
 
     assert len(result['pager_duty']) == 1
     assert result['pager_duty'][0] == {
-        'client_url': 'https://undefined.console.aws.amazon.com/ses/home?region=undefined#dashboard:',
-        'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
+        'client_url': 'https://None.console.aws.amazon.com/ses/home?region=None#dashboard:',
+        'dedup_key': 'undefined-None-undefined-ses-account-monitor/ses_account_sending_quota',
         'routing_key': None,
         'client': 'AWS Console',
         'event_action': 'trigger',
@@ -225,10 +225,10 @@ def test_handle_ses_sending_quota_critical(monitor, target_datetime):
                 'version': 'v1.2018.06.18',
                 'utilization': '150%',
                 'threshold': '90%',
-                'aws_region': 'undefined',
+                'aws_region': None,
                 'ts': '2018-01-01T00:00:00+00:00',
                 'aws_environment': 'undefined'},
-            'source': 'undefined-undefined-undefined-ses-account-monitor',
+            'source': 'undefined-None-undefined-ses-account-monitor',
             'group': 'aws-undefined',
             'severity': 'critical',
             'timestamp': '2018-01-01T00:00:00+00:00',
@@ -254,7 +254,7 @@ def test_handle_ses_sending_quota_warning(monitor, target_datetime):
 
     assert len(result['pager_duty']) == 1
     assert result['pager_duty'][0] == {
-        'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
+        'dedup_key': 'undefined-None-undefined-ses-account-monitor/ses_account_sending_quota',
         'event_action': 'resolve',
         'routing_key': None}
     assert len(result['slack']) == 1
@@ -264,13 +264,13 @@ def test_handle_ses_sending_quota_warning(monitor, target_datetime):
              'fallback': 'SES account sending rate has breached WARNING threshold.',
              'fields': [{'short': True,
                          'title': 'Service',
-                         'value': '<https://undefined.console.aws.amazon.com/ses/home?region=undefined#dashboard:|SES Account Sending>'},
+                         'value': '<https://None.console.aws.amazon.com/ses/home?region=None#dashboard:|SES Account Sending>'},
                         {'short': True,
                          'title': 'Account',
                          'value': 'undefined'},
                         {'short': True,
                          'title': 'Region',
-                         'value': 'undefined'},
+                         'value': None},
                         {'short': True,
                          'title': 'Environment',
                          'value': 'undefined'},
@@ -294,7 +294,7 @@ def test_handle_ses_sending_quota_warning(monitor, target_datetime):
                         {'short': False,
                          'title': 'Message',
                          'value': 'SES account sending rate has breached the WARNING threshold.'}],
-             'footer': 'undefined-undefined-undefined-ses-account-monitor',
+             'footer': 'undefined-None-undefined-ses-account-monitor',
              'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
              'ts': 1514764800}],
         'icon_emoji': None,
@@ -321,7 +321,7 @@ def test_handle_ses_sending_quota_ok(monitor, target_datetime):
         'pager_duty': deque([{
             'event_action': 'resolve',
             'routing_key': None,
-            'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota'
+            'dedup_key': 'undefined-None-undefined-ses-account-monitor/ses_account_sending_quota'
         }])
     }
 
@@ -338,8 +338,8 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
 
     assert len(result['pager_duty']) == 1
     assert result['pager_duty'][0] == {'client': 'AWS Console',
-                                       'client_url': 'https://undefined.console.aws.amazon.com/ses/home?region=undefined#reputation-dashboard:',
-                                       'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_reputation',
+                                       'client_url': 'https://None.console.aws.amazon.com/ses/home?region=None#reputation-dashboard:',
+                                       'dedup_key': 'undefined-None-undefined-ses-account-monitor/ses_account_reputation',
                                        'event_action': 'trigger',
                                        'payload': {'class': 'ses_account_reputation',
                                                    'component': 'ses',
@@ -347,7 +347,7 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
                                                                       'action_message': 'SES account is in danger of being suspended.',
                                                                       'aws_account_name': 'undefined',
                                                                       'aws_environment': 'undefined',
-                                                                      'aws_region': 'undefined',
+                                                                      'aws_region': None,
                                                                       'bounce_rate': '5.00%',
                                                                       'bounce_rate_threshold': '5.00%',
                                                                       'bounce_rate_timestamp': '2018-06-17T02:11:25.787402+00:00',
@@ -358,7 +358,7 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
                                                                       'version': 'v1.2018.06.18'},
                                                    'group': 'aws-undefined',
                                                    'severity': 'critical',
-                                                   'source': 'undefined-undefined-undefined-ses-account-monitor',
+                                                   'source': 'undefined-None-undefined-ses-account-monitor',
                                                    'summary': 'SES account reputation is at dangerous levels.',
                                                    'timestamp': '2018-06-17T02:11:25.787402+00:00'},
                                        'routing_key': None}
@@ -370,13 +370,13 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
              'fallback': 'SES account reputation has breached CRITICAL threshold.',
              'fields': [{'short': True,
                          'title': 'Service',
-                         'value': '<https://undefined.console.aws.amazon.com/ses/home?region=undefined#reputation-dashboard:|SES Account Reputation>'},
+                         'value': '<https://None.console.aws.amazon.com/ses/home?region=None#reputation-dashboard:|SES Account Reputation>'},
                         {'short': True,
                          'title': 'Account',
                          'value': 'undefined'},
                         {'short': True,
                          'title': 'Region',
-                         'value': 'undefined'},
+                         'value': None},
                         {'short': True,
                          'title': 'Environment',
                          'value': 'undefined'},
@@ -401,7 +401,7 @@ def test_handle_ses_reputation_critical(monitor, end_datetime, metric_data_resul
                         {'short': False,
                          'title': 'Message',
                          'value': 'SES account reputation has breached the CRITICAL threshold.'}],
-             'footer': 'undefined-undefined-undefined-ses-account-monitor',
+             'footer': 'undefined-None-undefined-ses-account-monitor',
              'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
              'ts': 1529201485}],
         'icon_emoji': None,
@@ -427,13 +427,13 @@ def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_result
              'fields': [
                  {'short': True,
                   'title': 'Service',
-                  'value': '<https://undefined.console.aws.amazon.com/ses/home?region=undefined#reputation-dashboard:|SES Account Reputation>'},
+                  'value': '<https://None.console.aws.amazon.com/ses/home?region=None#reputation-dashboard:|SES Account Reputation>'},
                  {'short': True,
                   'title': 'Account',
                   'value': 'undefined'},
                  {'short': True,
                   'title': 'Region',
-                  'value': 'undefined'},
+                  'value': None},
                  {'short': True,
                   'title': 'Environment',
                   'value': 'undefined'},
@@ -452,7 +452,7 @@ def test_handle_ses_reputation_warning(monitor, end_datetime, metric_data_result
                  {'short': False,
                   'title': 'Message',
                   'value': 'SES account reputation has breached the WARNING threshold.'}],
-             'footer': 'undefined-undefined-undefined-ses-account-monitor',
+             'footer': 'undefined-None-undefined-ses-account-monitor',
              'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
              'ts': 1529201485}],
         'icon_emoji': None,

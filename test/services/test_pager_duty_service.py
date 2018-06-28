@@ -22,14 +22,14 @@ def service(webhook_url):
 @pytest.fixture
 def ses_account_sending_quota_trigger_event_payload():
     return {'client': 'AWS Console',
-            'client_url': 'https://undefined.console.aws.amazon.com/ses/home?region=undefined#dashboard:',
-            'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
+            'client_url': 'https://None.console.aws.amazon.com/ses/home?region=None#dashboard:',
+            'dedup_key': 'undefined-None-undefined-ses-account-monitor/ses_account_sending_quota',
             'event_action': 'trigger',
             'payload': {'class': 'ses_account_sending_quota',
                         'component': 'ses',
                         'custom_details': {'aws_account_name': 'undefined',
                                            'aws_environment': 'undefined',
-                                           'aws_region': 'undefined',
+                                           'aws_region': None,
                                            'max_volume': 10,
                                            'volume': 10,
                                            'utilization': '100%',
@@ -38,7 +38,7 @@ def ses_account_sending_quota_trigger_event_payload():
                                            'version': 'v1.2018.06.18'},
                         'group': 'aws-undefined',
                         'severity': 'critical',
-                        'source': 'undefined-undefined-undefined-ses-account-monitor',
+                        'source': 'undefined-None-undefined-ses-account-monitor',
                         'summary': 'SES account sending quota is at capacity.',
                         'timestamp': '2018-01-01T00:00:00+00:00'},
             'routing_key': '12345'}
@@ -47,8 +47,8 @@ def ses_account_sending_quota_trigger_event_payload():
 @pytest.fixture
 def ses_account_reputation_trigger_event_payload():
     return {'client': 'AWS Console',
-            'client_url': 'https://undefined.console.aws.amazon.com/ses/home?region=undefined#reputation-dashboard:',
-            'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/ses_account_reputation',
+            'client_url': 'https://None.console.aws.amazon.com/ses/home?region=None#reputation-dashboard:',
+            'dedup_key': 'undefined-None-undefined-ses-account-monitor/ses_account_reputation',
             'event_action': 'trigger',
             'payload': {'class': 'ses_account_reputation',
                         'component': 'ses',
@@ -56,7 +56,7 @@ def ses_account_reputation_trigger_event_payload():
                                            'action_message': 'SES account sending is disabled.',
                                            'aws_account_name': 'undefined',
                                            'aws_environment': 'undefined',
-                                           'aws_region': 'undefined',
+                                           'aws_region': None,
                                            'bounce_rate': '1.00%',
                                            'bounce_rate_threshold': '1.00%',
                                            'bounce_rate_timestamp': '2018-01-01T00:00:00+00:00',
@@ -67,7 +67,7 @@ def ses_account_reputation_trigger_event_payload():
                                            'version': 'v1.2018.06.18'},
                         'group': 'aws-undefined',
                         'severity': 'critical',
-                        'source': 'undefined-undefined-undefined-ses-account-monitor',
+                        'source': 'undefined-None-undefined-ses-account-monitor',
                         'summary': 'SES account reputation is at dangerous levels.',
                         'timestamp': '2018-01-01T00:00:00+00:00'},
             'routing_key': '12345'}
@@ -76,7 +76,7 @@ def ses_account_reputation_trigger_event_payload():
 @pytest.fixture
 def build_resolve_event_payload():
     def _build_resolve_event_payload(target):
-        return {'dedup_key': 'undefined-undefined-undefined-ses-account-monitor/{}'.format(target),
+        return {'dedup_key': 'undefined-None-undefined-ses-account-monitor/{}'.format(target),
                 'event_action': 'resolve',
                 'routing_key': '12345'}
 
@@ -186,10 +186,10 @@ def test_send_events(service, webhook_url, iso8601_date, metrics):
 
         assert send_status is True
 
-        expected_eids = ['trigger::undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
-                         'resolve::undefined-undefined-undefined-ses-account-monitor/ses_account_sending_quota',
-                         'trigger::undefined-undefined-undefined-ses-account-monitor/ses_account_reputation',
-                         'resolve::undefined-undefined-undefined-ses-account-monitor/ses_account_reputation']
+        expected_eids = ['trigger::undefined-None-undefined-ses-account-monitor/ses_account_sending_quota',
+                         'resolve::undefined-None-undefined-ses-account-monitor/ses_account_sending_quota',
+                         'trigger::undefined-None-undefined-ses-account-monitor/ses_account_reputation',
+                         'resolve::undefined-None-undefined-ses-account-monitor/ses_account_reputation']
 
         for idx, (eid, request) in enumerate(requests):
             assert eid == expected_eids[idx]
