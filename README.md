@@ -106,8 +106,8 @@ The handler is located at `lambda_handler.lambda_handler`.
 | SES_MONITOR_STRATEGY | `str` | alert | managed | Strategy for how to handle metrics at threshold levels. Default is to alert only. Switch to managed to enable SES autopausing. |
 | SLACK_CHANNELS | `list` | `''` | `#general,#dev-ops,#alerts` | Comma delimited list of channels to post notifications to. |
 | SLACK_FOOTER_ICON_URL | `str` | https://platform.slack-edge.com/img/default_application_icon.png | - | URL for the Slack message footer icon. |
-| SLACK_ICON_EMOJI | `str` | None | `:dragon:` | Slack icon emoji, optional. |
-| SLACK_WEBHOOK_URL | `str` | None | https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX | Slack webook url. |
+| SLACK_ICON_EMOJI | `str` | `None` | `:dragon:` | Slack icon emoji, optional. |
+| SLACK_WEBHOOK_URL | `str` | `None` | https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX | Slack webook url. |
 
 ## License
 
