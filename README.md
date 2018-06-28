@@ -81,7 +81,7 @@ The handler is located at `lambda_handler.lambda_handler`.
 | ENVIRONMENT VARIABLE | TYPE | DEFAULT VALUE | CUSTOM EXAMPLE | Description |
 | -------------------- | ---- | ------------- | -------------- | ----------- |
 | LAMBDA_AWS_ACCOUNT_NAME | `str` | undefined | supercoolco | AWS account name. |
-| LAMBDA_AWS_REGION | `str` | undefined | us-west-2 | AWS region. |
+| LAMBDA_AWS_REGION | `str` | `None` | us-west-2 | AWS region. |
 | LAMBDA_ENVIRONMENT | `str` | undefined | global | Lambda environment. |
 | LAMBDA_NAME | `str` | ses-account-monitor | ses-monitor | Lambda name. |
 | LAMBDA_SERVICE_NAME | `str` | `$LAMBDA_AWS_ACCOUNT_NAME-$LAMBDA_AWS_REGION-$LAMBDA_ENVIRONMENT-$LAMBDA_NAME` | supercoolco-us-west-2-global-ses-account-monitor | Lambda service name, if you want to override the inferred name. |
