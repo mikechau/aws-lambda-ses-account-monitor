@@ -15,6 +15,8 @@ from datetime import (
     timedelta,
     timezone)
 
+from decimal import Decimal
+
 import boto3
 
 from ses_account_monitor.config import (
@@ -92,7 +94,7 @@ def get_last_metric(metric):
 
     last_ts = max(metric['Timestamps'])
     last_index = metric['Timestamps'].index(last_ts)
-    last_value = metric['Values'][last_index]
+    last_value = float(Decimal(str(metric['Values'][last_index])) * 100)
 
     return (metric['Label'], last_value, last_ts.astimezone(timezone.utc).isoformat())
 
@@ -156,10 +158,8 @@ class CloudWatchService(object):
 
         Returns:
             list (tuple): Returns a list of tuples, representing the reputation metrics.
-                label (str): Name of the metric, taken from the CloudWatch metric results data label.
-                value (float): The value of the metric, will already be in percentage form.
-                threshold (float): The threshold percentage.
-                metric_ts (str): ISO 8601 timestamp.
+
+                [(label, value, threshold, iso8601_timestamp), ...]
         '''
 
         if metric_timedelta is None:
@@ -277,10 +277,8 @@ class CloudWatchService(object):
 
         Returns:
             list (tuple): Returns a list of tuples, representing the reputation metrics.
-                label (str): Name of the metric, taken from the CloudWatch metric results data label.
-                value (float): The value of the metric, will already be in percentage form.
-                threshold (float): The threshold percentage.
-                metric_ts (str): ISO 8601 timestamp.
+
+                [(label, value, threshold, iso8601_timestamp), ...]
         '''
 
         thresholds = self.ses_thresholds

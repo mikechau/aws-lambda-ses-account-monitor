@@ -96,7 +96,7 @@ def metric_data_results_response_critical(end_datetime):
                     end_datetime,
                 ],
                 'Values': [
-                    5.0
+                    0.05
                 ],
                 'StatusCode': 'Complete',
             },
@@ -107,7 +107,7 @@ def metric_data_results_response_critical(end_datetime):
                     end_datetime
                 ],
                 'Values': [
-                    99.0
+                    0.99
                 ]
             }
         ],
@@ -126,7 +126,7 @@ def metric_data_results_response_warning(end_datetime):
                     end_datetime,
                 ],
                 'Values': [
-                    5.23994
+                    0.0523994
                 ],
                 'StatusCode': 'Complete',
             },
