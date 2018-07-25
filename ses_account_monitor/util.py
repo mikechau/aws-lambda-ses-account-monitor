@@ -32,7 +32,7 @@ class CustomJsonEncoder(json.JSONEncoder):
 
             return json.JSONEncoder.default(self, o)
         except TypeError:
-            str(o)
+            return str(o)
 
 
 def json_dump(obj):
