@@ -26,10 +26,13 @@ class CustomJsonEncoder(json.JSONEncoder):
     '''
 
     def default(self, o):
-        if isinstance(o, datetime):
-            return o.isoformat()
+        try:
+            if isinstance(o, datetime):
+                return o.isoformat()
 
-        return json.JSONEncoder.default(self, o)
+            return json.JSONEncoder.default(self, o)
+        except TypeError:
+            str(o)
 
 
 def json_dump(obj):
